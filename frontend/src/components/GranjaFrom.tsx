@@ -2,22 +2,23 @@ import React, { useState } from "react";
 
 interface MascotaFromProps {
     onSave: (data: any) => void; // funcion que recibe los datos para guardarlos
-    onCancel: () => void; // funcion para cerrar el modal sin guardar
+    onCancel: () => void;
+    initialData?: any; // nueva funcion
 }
 
-const MascotaForm: React.FC<MascotaFromProps> = ({ onSave, onCancel }) => {
+const MascotaForm: React.FC<MascotaFromProps> = ({ onSave, onCancel, initialData }) => {
     // Estado local para cada campo
 
-    const [nombre, setNombre] = useState("");
-    const [precio_compra, setPrecio_Compra] = useState("");
-    const [precio_venta, setPrecio_Venta] = useState("");
-    const [precioKg, setPrecioKg] = useState("");
-    const [peso_bolsa_kg, setPeso_Bolsa_Kg] = useState("");
-    const [stock_unidades, setStock_Unidades] = useState("");
-    const [animal, setAnimal] = useState("");
-    const [etapa, setEtapa] = useState("");
-    const [proteina, setProteina] = useState("");
-    const [calidad, setCalidad] = useState("");
+    const [nombre, setNombre] = useState(initialData?.nombre ??"");
+    const [precio_compra, setPrecio_Compra] = useState(initialData?.precio_compra ??"");
+    const [precio_venta, setPrecio_Venta] = useState(initialData?.precio_venta ??"");
+    const [precioKg, setPrecioKg] = useState(initialData?.precio_venta_kg ??"");
+    const [peso_bolsa_kg, setPeso_Bolsa_Kg] = useState(initialData?.peso_bolsa_kg ??"");
+    const [stock_unidades, setStock_Unidades] = useState(initialData?.stock_unidades ??"");
+    const [animal, setAnimal] = useState(initialData?.animal ??"");
+    const [etapa, setEtapa] = useState(initialData?.etapa ??"");
+    const [proteina, setProteina] = useState(initialData?.proteinas ??"");
+    const [calidad, setCalidad] = useState(initialData?.calidad ??"");
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,6 +26,7 @@ const MascotaForm: React.FC<MascotaFromProps> = ({ onSave, onCancel }) => {
         // Creamos el objeto con los datos de mascotas
 
         const nuevoArticulo = {
+            ...(initialData?.id && { id: initialData.id }),
             nombre,
             precio_compra,
             precio_venta,

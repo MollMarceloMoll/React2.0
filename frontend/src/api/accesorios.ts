@@ -1,7 +1,7 @@
 import api from "./index";
 
 export async function getAcceosorios() {
-    const res = await api.get("/productos");
+    const res = await api.get("/accesorios");
     return res.data;
 }
 
