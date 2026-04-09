@@ -2,6 +2,8 @@ import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Modal from "./Modal";
 import MascotaForm from "./MascotaForm";
+import GranjaFrom from "./GranjaFrom";
+import AccesorioForm from "./AccesorioForm";
 import { Outlet } from "react-router-dom";
 
 export default function Layout() {
@@ -43,10 +45,15 @@ export default function Layout() {
       {/** Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)}>
         {modalTipo === "mascota" && (
-          <MascotaForm
-            onSave = {handleSave}
-            onCancel={() => setModalOpen(false)}
-          />
+          <MascotaForm onSave={handleSave} onCancel={() => setModalOpen(false)} />
+        )}
+        {/* Granja */}
+        {modalTipo === "granja" && (
+          <GranjaFrom onSave={handleSave} onCancel={() => setModalOpen(false)} />
+        )}
+        {/* Accesorio */}
+        {modalTipo === "accesorio" && (
+          <AccesorioForm onSave={handleSave} onCancel={() => setModalOpen(false)} />
         )}
       </Modal>
 
@@ -54,7 +61,7 @@ export default function Layout() {
       <main
         className={`flex-1 h-screen transition-all duration-300 ${
           sidebarOpen ? "ml-64" : "ml-16"
-        } p-4 overflow-y-auto bg-gray-100 text-black`}
+        } p-4 overflow-y-auto bg-black text-black`}
       >
         <Outlet />
       </main>

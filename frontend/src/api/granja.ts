@@ -1,7 +1,7 @@
 import api from "./index";
 
 export async function getGranja() {
-    const res = await api.get("/granja");
+    const res = await api.get("/productos");
     return res.data;
 }
 

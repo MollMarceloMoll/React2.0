@@ -83,6 +83,65 @@ app.post("/api/productos", async (req, res) => {
         }
 });
 
+// Ruta para guadar alimento para granja
+app.post("/api/productos", async (req, res) => {
+    try {
+        const {
+            nombre,
+            precio_compra,
+            precio_venta,
+            precio_venta_kg,
+            peso_bolsa_kg,
+            stock_unidades,
+            categoria,
+            animal,
+            etapa,
+            proteinas,
+            calidad
+        } = req.body;
+
+         const [result] = await db.query(
+            `INSERT INTO productos 
+                (nombre, precio_compra, precio_venta, precio_venta_kg, peso_bolsa_kg, stock_unidades, categoria, animal, etapa, proteinas, calidad) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [nombre, precio_compra, precio_venta, precio_venta_kg, peso_bolsa_kg, stock_unidades, categoria, animal, etapa, proteinas, calidad]
+        );
+    res.status(201).json({ message: "Producto guardado", id: result.insertId });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Error al guardar producto" });
+        }
+});
+
+// Ruta para guadar accesorios
+app.post("/api/productos", async (req, res) => {
+    try {
+        const {
+            nombre,
+            precio_compra,
+            precio_venta,
+            stock_unidades,
+            categoria,
+            animal,
+            etapa,
+            color,
+            talle,
+            calidad
+        } = req.body;
+
+         const [result] = await db.query(
+            `INSERT INTO productos 
+                (nombre, precio_compra, precio_venta, precio_venta_kg, peso_bolsa_kg, stock_unidades, categoria, animal, etapa, proteinas, calidad) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [nombre, precio_compra, precio_venta, stock_unidades, categoria, animal, etapa, color, talle, calidad]
+        );
+    res.status(201).json({ message: "Producto guardado", id: result.insertId });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Error al guardar producto" });
+        }
+});
+
 // Rutas de login
 app.use("/api", loginRouter);
 

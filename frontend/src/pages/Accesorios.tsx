@@ -28,15 +28,13 @@ const Accesorios = () => {
           <tr>
             <th className="px-4 py-2 border text-sm">ID</th>
             <th className="px-4 py-2 border text-sm">Nombre</th>
-            <th className="px-4 py-2 border text-sm">Precio Unidad</th>
-            <th className="px-4 py-2 border text-sm">Precio KG</th>
             <th className="px-4 py-2 border text-sm">Stock</th>
             <th className="px-4 py-2 border text-sm">Categoría</th>
             <th className="px-4 py-2 border text-sm">Calidad</th>
             <th className="px-4 py-2 border text-sm">Animal</th>
             <th className="px-4 py-2 border text-sm">Etapa</th>
-            <th className="px-4 py-2 border text-sm">Proteina</th>
-            <th className="px-4 py-2 border text-sm">Sabor</th>
+            <th className="px-4 py-2 border text-sm">Talle</th>
+            <th className="px-4 py-2 border text-sm">Color</th>
             <th className="px-4 py-2 border text-sm">Editar</th>
             <th className="px-4 py-2 border text-sm">Eliminar</th>
           </tr>
@@ -50,14 +48,12 @@ const Accesorios = () => {
               <td className="px-4 py-2 border border-gray-300 text-xs">{prod.id}</td>
               <td className="px-4 py-2 border border-gray-300 text-xs">{prod.nombre}</td>
               <td className="px-4 py-2 border border-gray-300 text-xs">${prod.precio_venta}</td>
-              <td className="px-4 py-2 border border-gray-300 text-xs">${prod.precio_venta_kg}</td>
-              <td className="px-4 py-2 border border-gray-300 text-xs">{prod.stock_unidades}</td>
               <td className="px-4 py-2 border border-gray-300 text-xs">{prod.categoria}</td>
               <td className="px-4 py-2 border border-gray-300 text-xs">{prod.calidad}</td>
               <td className="px-4 py-2 border border-gray-300 text-xs">{prod.animal}</td>
               <td className="px-4 py-2 border border-gray-300 text-xs">{prod.etapa}</td>
-              <td className="px-4 py-2 border border-gray-300 text-xs">{prod.proteinas}</td>
-              <td className="px-4 py-2 border border-gray-300 text-xs">{prod.sabor}</td>
+              <td className="px-4 py-2 border border-gray-300 text-xs">{prod.talle}</td>
+              <td className="px-4 py-2 border border-gray-300 text-xs">{prod.color}</td>
               <td className="px-4 py-2 border"><button className="cursor-pointer">Editar</button></td>
               <td className="px-4 py-2 border"><button>Delete</button></td>
 

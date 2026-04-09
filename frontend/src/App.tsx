@@ -13,7 +13,8 @@ import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
-    <Router>
+    <div>
+      <Router>
       <Routes>
         {/* Ruta inicial: redirige a login */}
         <Route path="/" element={<Navigate to="/login" />} />
@@ -39,6 +40,8 @@ function App() {
         </Route>
       </Routes>
     </Router>
+    </div>
+    
   );
 }
 
