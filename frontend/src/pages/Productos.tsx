@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../api/index";
+import { useOutletContext } from "react-router-dom";
 
 const Productos = () => {
   // 1. Estado para guardar los productos
@@ -18,6 +19,8 @@ const Productos = () => {
 
     fetchProductos();
   }, []);
+
+  const { onEditar } = useOutletContext<{ onEditar: (p: any) => void }>();
 
   // 3. Renderizamos la tabla
   return (
@@ -58,7 +61,12 @@ const Productos = () => {
               <td className="px-4 py-2 border border-gray-300 text-xs">{prod.etapa}</td>
               <td className="px-4 py-2 border border-gray-300 text-xs">{prod.proteinas}</td>
               <td className="px-4 py-2 border border-gray-300 text-xs">{prod.sabor}</td>
-              <td className="px-4 py-2 border"><button className="cursor-pointer">Editar</button></td>
+              <td className="px-4 py-2 border">
+                <button 
+                  className="cursor-pointer"
+                  onClick={() => onEditar(prod)}
+                  >Editar</button>
+              </td>
               <td className="px-4 py-2 border"><button>Delete</button></td>
 
             </tr>

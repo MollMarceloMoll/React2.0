@@ -12,6 +12,7 @@ export default function Layout() {
   const [modalTipo, setModalTipo] = useState("");
   const [productoEditando, setProductoEditando] = useState<any>(null);
 
+
   const handleNuevo = (tipo: string) => {
     setProductoEditando(null);
     setModalTipo(tipo);

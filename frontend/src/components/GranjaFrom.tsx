@@ -20,13 +20,15 @@ const MascotaForm: React.FC<MascotaFromProps> = ({ onSave, onCancel, initialData
     const [proteina, setProteina] = useState(initialData?.proteinas ??"");
     const [calidad, setCalidad] = useState(initialData?.calidad ??"");
 
+    const esEdicion = !!initialData?.id; // para saber si edición
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
     
         // Creamos el objeto con los datos de mascotas
 
         const nuevoArticulo = {
-            ...(initialData?.id && { id: initialData.id }),
+            ...(esEdicion && { id: initialData.id }),
             nombre,
             precio_compra,
             precio_venta,
@@ -45,7 +47,7 @@ const MascotaForm: React.FC<MascotaFromProps> = ({ onSave, onCancel, initialData
     <form onSubmit={handleSubmit} className="space-y-4 max-h-[80vh] overflow-y-auto pr-1">
     
     <h2 className="text-xl font-bold text-gray-800 border-b pb-2">
-      🐾 Nuevo Artículo — Granja
+      {esEdicion ? "✏️ Actualizando artículo — Granja" : "🐾 Nuevo Artículo — Granja"}
     </h2>
 
     {/* Nombre - fila completa */}
@@ -195,7 +197,7 @@ const MascotaForm: React.FC<MascotaFromProps> = ({ onSave, onCancel, initialData
         type="submit"
         className="px-4 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700"
       >
-        Guardar
+        {esEdicion ? "Actualizar" : "Guardar"}
       </button>
     </div>
 

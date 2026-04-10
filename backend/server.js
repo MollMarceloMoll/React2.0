@@ -95,11 +95,20 @@ app.put("/api/productos/:id", async (req, res) => {
     try {
         const { id } = req.params;
         const {
-            nombre, precio_compra, precio_venta,
-            precio_venta_kg = null, peso_bolsa_kg = null,
-            stock_unidades, categoria, animal = null,
-            etapa = null, proteinas = null, sabor = null,
-            calidad = null, color = null, talle = null
+            nombre, 
+            precio_compra, 
+            precio_venta,
+            precio_venta_kg = null, 
+            peso_bolsa_kg = null,
+            stock_unidades, 
+            categoria, 
+            animal = null,
+            etapa = null, 
+            proteinas = null, 
+            sabor = null,
+            calidad = null, 
+            color = null, 
+            talle = null
         } = req.body;
 
         await db.query(
