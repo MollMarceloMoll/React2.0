@@ -22,38 +22,55 @@ const db = await mysql.createConnection({
 
 // Definimos las rutas
 
-// Ruta para obtener la LISTA MASCOTAS
+// 🔑 CAMBIO PRINCIPAL: Obtener TODOS los productos (sin filtro)
 app.get("/api/productos", async(req, res) => {
+    try {
+        const [rows] = await db.query("SELECT * FROM productos"); // ✅ Sin WHERE
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({error : "Error al obtener productos"});
+    }
+});
+
+// Rutas adicionales (opcionales, para consultas específicas)
+app.get("/api/mascotas", async(req, res) => {
     try {
         const [rows] = await db.query("SELECT * FROM productos WHERE categoria = 'mascota'");
         res.json(rows);
     } catch (error) {
-        res.status(500).json({error : "Error al obtener lista accesorios"});
+        res.status(500).json({error : "Error al obtener mascotas"});
     }
 });
 
-// Ruta para obtener la LISTA GRANJA
 app.get("/api/granja", async(req, res) => {
     try {
         const [rows] = await db.query("SELECT * FROM productos WHERE categoria = 'granja'");
         res.json(rows);
     } catch (error) {
-        res.status(500).json({error: "Error al obtener lista granja"})
+        res.status(500).json({error: "Error al obtener granja"})
     }
 })
 
-// Ruta para obtener la LISTA ACCESORIOS
 app.get("/api/accesorios", async(req, res) => {
     try {
         const [rows] = await db.query("SELECT * FROM productos WHERE categoria = 'accesorio'");
         res.json(rows);
     } catch (error) {
-        res.status(500).json({error: "Error al obtener lista accesorios"})
+        res.status(500).json({error: "Error al obtener accesorios"})
+    }
+})
+
+app.get("/api/veterinaria", async(req, res) => {
+    try {
+        const [rows] = await db.query("SELECT * FROM productos WHERE categoria = 'veterinaria'");
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({error: "Error al obtener veterinaria"})
     }
 })
 
 
-// Ruta para guardar cualquier producto (mascota, granja, accesorio)
+// Ruta para guardar cualquier producto (mascota, granja, accesorio, veterinaria)
 app.post("/api/productos", async (req, res) => {
     try {
         const {
@@ -90,7 +107,7 @@ app.post("/api/productos", async (req, res) => {
 });
 
 
-// Ruta para actualizar cualquier producto (mascota, granja, accesorio)
+// Ruta para actualizar cualquier producto (mascota, granja, accesorio, veterinaria)
 app.put("/api/productos/:id", async (req, res) => {
     try {
         const { id } = req.params;

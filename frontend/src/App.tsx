@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Productos from './pages/Productos';
 import Granja from './pages/Granja';
 import Accesorios from './pages/Accesorios';
+import Veterinaria from './pages/Veterinaria';
 import Ventas from './pages/Ventas';
 import Usuarios from './pages/Usuarios';
 import Reportes from './pages/Reportes';
@@ -34,6 +35,7 @@ function App() {
           <Route path="/productos" element={<Productos />} />
           <Route path="/granja" element={<Granja />} />
           <Route path="/accesorios" element={<Accesorios />} />
+          <Route path="/veterinaria" element={<Veterinaria />} />
           <Route path="/ventas" element={<Ventas />} />
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/reportes" element={<Reportes />} />

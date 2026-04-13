@@ -44,6 +44,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, onNuevo }) => {
           📦 {sidebarOpen && <span className="ml-2">Lista Accesorios</span>}
         </Link>
 
+        <Link to="/veterinaria" className="flex items-center p-2 rounded hover:bg-gray-700">
+          📦 {sidebarOpen && <span className="ml-2">Lista Veterinaria</span>}
+        </Link>
+
         {/* Botón Nuevo Artículo */}
         <button
           onClick={() => setNuevoOpen(!nuevoOpen)}
@@ -70,9 +74,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, onNuevo }) => {
           </div>
         )}
 
-        <Link to="/productos" className="flex items-center p-2 rounded hover:bg-gray-700">
-          📦 {sidebarOpen && <span className="ml-2">Lista Veterinaria</span>}
-        </Link>
         <Link to="/ventas" className="flex items-center p-2 rounded hover:bg-gray-700">
           💰 {sidebarOpen && <span className="ml-2">Ventas</span>}
         </Link>
