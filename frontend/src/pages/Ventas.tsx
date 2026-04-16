@@ -1,10 +1,11 @@
 import React from 'react';
+import SalesForm from '../components/SalesForm';
 
 const Ventas = () => {
     return (
-        <div>
-            <h1>Ventas</h1>
-        </div>
+        <>
+        <SalesForm />;
+        </>
     );
 }
 
