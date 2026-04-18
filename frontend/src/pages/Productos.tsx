@@ -1,4 +1,10 @@
 import { useOutletContext } from "react-router-dom";
+import { 
+  Pencil, 
+  Trash2, 
+  Package, 
+  Warehouse 
+} from "lucide-react";
 
 const Productos = () => {
   // 📌 CAMBIO 1: Obtener productos del contexto (no del estado local)
@@ -11,68 +17,157 @@ const Productos = () => {
   if (error) return <p style={{color: 'red'}}>{error}</p>;
 
   return (
-    <div className="p-6 bg-gray-600 rounded-lg shadow border overflow-x-auto">
-      <h1 className="text-2xl font-bold mb-4">📦 Lista MASCOTAS ({mascotas.length})</h1>
-      <table className="w-full border border-gray-300 border-collapse rounded-lg shadow">
-        <thead className="bg-blue-800 font-serif">
-          <tr>
-            <th className="px-4 py-2 border text-sm">ID</th>
-            <th className="px-4 py-2 border text-sm">Nombre</th>
-            <th className="px-4 py-2 border text-sm">Precio Unidad</th>
-            <th className="px-4 py-2 border text-sm">Precio KG</th>
-            <th className="px-4 py-2 border text-sm">Stock</th>
-            <th className="px-4 py-2 border text-sm">Categoría</th>
-            <th className="px-4 py-2 border text-sm">Calidad</th>
-            <th className="px-4 py-2 border text-sm">Animal</th>
-            <th className="px-4 py-2 border text-sm">Etapa</th>
-            <th className="px-4 py-2 border text-sm">Proteina</th>
-            <th className="px-4 py-2 border text-sm">Sabor</th>
-            <th className="px-4 py-2 border text-sm">Editar</th>
-            <th className="px-4 py-2 border text-sm">Eliminar</th>
-          </tr>
-        </thead>
-        <tbody>
-          {mascotas.length > 0 ? (
-            mascotas.map((prod: any) => (
-              <tr
-                key={prod.id}
-                className="bg-gray-600 text-white hover:bg-gray-50 hover:text-black transition-colors"
-              >
-                <td className="px-4 py-2 border border-gray-300 text-xs">{prod.id}</td>
-                <td className="px-4 py-2 border border-gray-300 text-xs">{prod.nombre}</td>
-                <td className="px-4 py-2 border border-gray-300 text-xs">${prod.precio_venta}</td>
-                <td className="px-4 py-2 border border-gray-300 text-xs">${prod.precio_venta_kg || "N/A"}</td>
-                <td className="px-4 py-2 border border-gray-300 text-xs">{prod.stock_unidades}</td>
-                <td className="px-4 py-2 border border-gray-300 text-xs">{prod.categoria}</td>
-                <td className="px-4 py-2 border border-gray-300 text-xs">{prod.calidad || "N/A"}</td>
-                <td className="px-4 py-2 border border-gray-300 text-xs">{prod.animal}</td>
-                <td className="px-4 py-2 border border-gray-300 text-xs">{prod.etapa || "N/A"}</td>
-                <td className="px-4 py-2 border border-gray-300 text-xs">{prod.proteinas || "N/A"}</td>
-                <td className="px-4 py-2 border border-gray-300 text-xs">{prod.sabor || "N/A"}</td>
-                <td className="px-4 py-2 border">
-                  <button 
-                    className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer"
-                    onClick={() => onEditar(prod)}
+    <div className="p-6 bg-slate-900 rounded-2xl shadow-xl">
+      
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <Package className="w-6 h-6 text-blue-400" />
+            Mascotas
+          </h1>
+          <p className="text-gray-400 text-sm">
+            {mascotas.length} productos registrados
+          </p>
+        </div>
+
+        <input
+          type="text"
+          placeholder="Buscar..."
+          className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      {/* TABLA */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          
+          {/* HEAD */}
+          <thead>
+            <tr className="text-gray-400 border-b border-slate-700 text-left">
+              <th className="py-3 px-2">Producto</th>
+              <th className="py-3 px-2">Precio</th>
+              <th className="py-3 px-2">Stock</th>
+              <th className="py-3 px-2">Calidad</th>
+              <th className="py-3 px-2">Animal</th>
+              <th className="py-3 px-2">Etapa</th>
+              <th className="py-3 px-2">Proteina</th>
+              <th className="py-3 px-2">Sabor</th>
+              <th className="py-3 px-2">Costo</th>
+              <th className="py-3 px-2 text-right">Acciones</th>
+            </tr>
+          </thead>
+
+          {/* BODY */}
+          <tbody>
+            {mascotas.length > 0 ? (
+              mascotas.map((prod: any) => {
+
+                const stock = Number(prod.stock_unidades);
+
+                const stockColor =
+                  stock === 0
+                    ? "bg-red-500/20 text-red-400"
+                    : stock < 5
+                    ? "bg-yellow-500/20 text-yellow-400"
+                    : "bg-green-500/20 text-green-400";
+
+                return (
+                  <tr
+                    key={prod.id}
+                    className="border-b border-slate-800 hover:bg-slate-800/50 transition"
                   >
-                    ✏️ Editar
-                  </button>
-                </td>
-                <td className="px-4 py-2 border">
-                  <button className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 cursor-pointer">
-                    🗑️ Eliminar
-                  </button>
+                    
+                    {/* PRODUCTO */}
+                    <td className="py-3 px-2">
+                      <div className="flex flex-col">
+                        <span className="text-white font-medium">
+                          {prod.nombre}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          #{prod.id}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* PRECIO */}
+                    <td className="py-3 px-2 text-white">
+                      ${prod.precio_venta} /u
+                      <div className="text-xs text-gray-400">
+                        ${prod.precio_venta_kg || "-"} /kg
+                      </div>
+                    </td>
+
+                    {/* STOCK */}
+                    <td className="py-3 px-2">
+                      <span className={`px-2 py-1 rounded-full text-xs ${stockColor}`}>
+                        {stock === 0 ? "Sin stock" : `Stock: ${stock}`}
+                      </span>
+                    </td>
+
+                    {/* ANIMAL */}
+                    <td className="py-3 px-2 text-gray-300">
+                      {prod.animal}
+                    </td>
+
+                    {/* CALIDAD */}
+                    <td className="py-3 px-2 text-gray-300">
+                      {prod.calidad}
+                    </td>
+
+                    {/* ETAPA */}
+                    <td className="py-3 px-2 text-gray-300">
+                      {prod.etapa || "-"}
+                    </td>
+
+                    {/* PROTEINA */}
+                    <td className="py-3 px-2 text-gray-300">
+                      {prod.proteinas || "-"}%
+                    </td>
+
+                    {/* SABOR */}
+                    <td className="py-3 px-2 text-gray-300">
+                      {prod.sabor || "-"}
+                    </td>
+
+                    {/* COSTO */}
+                    <td className="py-3 px-2 text-gray-300">
+                      ${prod.precio_compra}
+                    </td>
+
+                    {/* ACCIONES */}
+                    <td className="py-3 px-2">
+                      <div className="flex justify-end gap-3">
+                        
+                        <button
+                          onClick={() => onEditar(prod)}
+                          className="text-blue-400 hover:text-blue-300 transition"
+                          title="Editar producto"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+
+                        <button className="text-red-400 hover:text-red-300 transition" title="Eliminar producto">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+
+                      </div>
+                    </td>
+
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan={7} className="text-center py-6 text-gray-400">
+                  No hay productos cargados.
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={13} className="px-4 py-2 text-center text-white">
-                No hay mascotas registradas
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+
+        </table>
+      </div>
     </div>
   );
 };

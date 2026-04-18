@@ -1,97 +1,149 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Package,
+  Wheat,
+  Gift,
+  Syringe,
+  PlusCircle,
+  ShoppingCart,
+  Users,
+  BarChart3,
+  LogOut,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react";
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, onNuevo }) => {
+  const [nuevoOpen, setNuevoOpen] = useState(false);
 
-  const [nuevoOpen, setNuevoOpen] = useState(false); // controla el submenú
-  
+  const menuItem =
+    "flex items-center gap-3 p-2 rounded-xl text-sm text-gray-300 hover:bg-slate-800 hover:text-white transition";
+
   return (
     <aside
-      className={`bg-gray-800 text-white h-screen fixed top-0 left-0 transition-all duration-300 ${
-        sidebarOpen ? "w-64" : "w-16"
+      className={`bg-slate-900 text-white h-screen fixed top-0 left-0 transition-all duration-300 border-r border-slate-800 ${
+        sidebarOpen ? "w-64" : "w-20"
       }`}
     >
-      {/* Header del sidebar con botón */}
-      <div className="p-4 flex justify-between items-center border-b border-gray-700">
-        {sidebarOpen ? (
-          <span className="text-xl font-bold">Forrajería App</span>
-        ) : (
-          <span className="text-lg"></span> // ícono visible en modo colapsado
+      {/* HEADER */}
+      <div className="p-4 flex items-center justify-between border-b border-slate-800">
+        {sidebarOpen && (
+          <span className="text-lg font-semibold tracking-wide">
+            Forrajería
+          </span>
         )}
+
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 bg-gray-700 hover:bg-green-700 text-xs rounded"
+          className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition"
         >
-          {sidebarOpen ? "✖" : "☰"}
+          {sidebarOpen ? (
+            <ChevronLeft className="w-4 h-4" />
+          ) : (
+            <ChevronRight className="w-4 h-4" />
+          )}
         </button>
       </div>
 
-      {/* Navegación */}
-      <nav className="flex-1 p-2 space-y-2">
-        <Link to="/dashboard" className="flex items-center p-2 rounded hover:bg-gray-700">
-          🏠 {sidebarOpen && <span className="ml-2">Dashboard</span>}
+      {/* NAV */}
+      <nav className="p-3 space-y-2">
+
+        <Link to="/dashboard" className={menuItem}>
+          <LayoutDashboard className="w-5 h-5" />
+          {sidebarOpen && "Dashboard"}
         </Link>
 
-        <Link to="/productos" className="flex items-center p-2 rounded hover:bg-gray-700" title="Lista Mascotas">
-          📦 {sidebarOpen && <span className="ml-2">Lista Mascotas</span>}
-        </Link>
-        
-        <Link to="/granja" className="flex items-center p-2 rounded hover:bg-gray-700">
-          📦 {sidebarOpen && <span className="ml-2">Lista Granja</span>}
+        <Link to="/productos" className={menuItem}>
+          <Package className="w-5 h-5" />
+          {sidebarOpen && "Mascotas"}
         </Link>
 
-        <Link to="/accesorios" className="flex items-center p-2 rounded hover:bg-gray-700">
-          📦 {sidebarOpen && <span className="ml-2">Lista Accesorios</span>}
+        <Link to="/granja" className={menuItem}>
+          <Wheat className="w-5 h-5" />
+          {sidebarOpen && "Granja"}
         </Link>
 
-        <Link to="/veterinaria" className="flex items-center p-2 rounded hover:bg-gray-700">
-          📦 {sidebarOpen && <span className="ml-2">Lista Veterinaria</span>}
+        <Link to="/accesorios" className={menuItem}>
+          <Gift className="w-5 h-5" />
+          {sidebarOpen && "Accesorios"}
         </Link>
 
-        {/* Botón Nuevo Artículo */}
+        <Link to="/veterinaria" className={menuItem}>
+          <Syringe className="w-5 h-5" />
+          {sidebarOpen && "Veterinaria"}
+        </Link>
+
+        {/* NUEVO ARTICULO */}
         <button
           onClick={() => setNuevoOpen(!nuevoOpen)}
-          className="flex items-center w-full p-2 rounded hover:bg-gray-700"
+          className={`${menuItem} w-full`}
         >
-          ➕ {sidebarOpen && <span className="ml-2">Nuevo Artículo</span>}
+          <PlusCircle className="w-5 h-5 text-blue-400" />
+          {sidebarOpen && "Nuevo"}
         </button>
 
-        {/* Submenú desplegable */}
+        {/* SUBMENU */}
         {nuevoOpen && sidebarOpen && (
-          <div className="ml-6 space-y-1">
-              <button onClick={() => onNuevo("mascota")} className="block p-2 rounded hover:bg-gray-700">
-                🐶 Nuevo Mascota
-              </button>
-              <button onClick={() => onNuevo("granja")} className="block p-2 rounded hover:bg-gray-700">
-                🐔 Nuevo Granja
-              </button>
-              <button onClick={() => onNuevo("accesorio")} className="block p-2 rounded hover:bg-gray-700">
-                🎁 Nuevo Accesorio
-              </button>
-              <button onClick={() => onNuevo("veterinaria")} className="block p-2 rounded hover:bg-gray-700">
-                💉 Nuevo Veterinaria
-              </button>
+          <div className="ml-8 mt-1 space-y-1 text-sm">
+
+            <button
+              onClick={() => onNuevo("mascota")}
+              className="block text-gray-400 hover:text-white"
+            >
+              Mascota
+            </button>
+
+            <button
+              onClick={() => onNuevo("granja")}
+              className="block text-gray-400 hover:text-white"
+            >
+              Granja
+            </button>
+
+            <button
+              onClick={() => onNuevo("accesorio")}
+              className="block text-gray-400 hover:text-white"
+            >
+              Accesorio
+            </button>
+
+            <button
+              onClick={() => onNuevo("veterinaria")}
+              className="block text-gray-400 hover:text-white"
+            >
+              Veterinaria
+            </button>
+
           </div>
         )}
 
-        <Link to="/ventas" className="flex items-center p-2 rounded hover:bg-gray-700">
-          💰 {sidebarOpen && <span className="ml-2">Ventas</span>}
-        </Link>
+        <div className="pt-4 border-t border-slate-800 mt-4 space-y-2">
 
-        <Link to="/usuarios" className="flex items-center p-2 rounded hover:bg-gray-700">
-          👤 {sidebarOpen && <span className="ml-2">Usuarios</span>}
-        </Link>
+          <Link to="/ventas" className={menuItem}>
+            <ShoppingCart className="w-5 h-5" />
+            {sidebarOpen && "Ventas"}
+          </Link>
 
-        <Link to="/reportes" className="flex items-center p-2 rounded hover:bg-gray-700">
-          📊 {sidebarOpen && <span className="ml-2">Reportes</span>}
-        </Link>
-        
+          <Link to="/usuarios" className={menuItem}>
+            <Users className="w-5 h-5" />
+            {sidebarOpen && "Usuarios"}
+          </Link>
+
+          <Link to="/reportes" className={menuItem}>
+            <BarChart3 className="w-5 h-5" />
+            {sidebarOpen && "Reportes"}
+          </Link>
+
+        </div>
       </nav>
 
-      {/* Cerrar sesión */}
-      <div className="p-2 border-t border-gray-700">
-        <button className="w-full p-2 bg-red-600 hover:bg-red-700 rounded">
-          🚪 {sidebarOpen && "Cerrar sesión"}
+      {/* FOOTER */}
+      <div className="p-3 border-t border-slate-800">
+        <button className="flex items-center gap-2 w-full p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition">
+          <LogOut className="w-4 h-4" />
+          {sidebarOpen && "Cerrar sesión"}
         </button>
       </div>
     </aside>
