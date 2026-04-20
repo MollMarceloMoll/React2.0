@@ -1,221 +1,192 @@
 import React, { useState } from 'react';
 import Modal from '../Modal';
+import { Package, Minus, Plus, X, ShoppingCart } from 'lucide-react';
 
-interface Product {
-  id: number;
-  nombre: string;
-  precio_venta: number;
-  precio_venta_kg?: number;
-  peso_bolsa_kg?: number;
-  stock_unidades: number;
-  stock_kg: number;
-  categoria: string;
-}
+const SaleItemModal = ({ product, isOpen, onClose, onAdd }: any) => {
+  const [tipo_venta,     setTipo]      = useState('unidad');
+  const [cantidad,       setCantidad]  = useState(1);
+  const [descuentoPct,   setDescuento] = useState(0);   // 0–100 %
+  const [error,          setError]     = useState<string | null>(null);
 
-interface SaleItemModalProps {
-  product: Product;
-  isOpen: boolean;
-  onClose: () => void;
-  onAdd: (item: any) => void;
-}
-
-const SaleItemModal: React.FC<SaleItemModalProps> = ({
-  product,
-  isOpen,
-  onClose,
-  onAdd,
-}) => {
-  const [tipo_venta, setTipo_venta] = useState<'unidad' | 'bolsa' | 'kg'>('unidad');
-  const [cantidad, setCantidad] = useState(1);
-  const [descuentoItem, setDescuentoItem] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-
-  // Determinar qué categorías pueden vender por kg
-  const puedeVenderPorKg = product.categoria === 'mascota' || product.categoria === 'granja';
-  const puedeVenderPorBolsa = product.categoria === 'alimento';
-
-  const precioUnitario = (tipo_venta === 'kg' && product.precio_venta_kg
-    ? parseFloat(String(product.precio_venta_kg))
-    : parseFloat(String(product.precio_venta))) || 0;
-
-  const subtotalBruto = parseFloat((cantidad * precioUnitario).toFixed(2));
-  const subtotal = parseFloat((subtotalBruto - descuentoItem).toFixed(2));
-
-  // Stock disponible según tipo de venta
-  const stockDisponible =
-    tipo_venta === 'kg' ? product.stock_kg : product.stock_unidades;
+  const precio        = tipo_venta === 'kg' ? product.precio_venta_kg || 0 : product.precio_venta;
+  const subtotal      = cantidad * precio;
+  const descuentoAmt  = subtotal * (descuentoPct / 100);   // monto calculado
+  const total         = subtotal - descuentoAmt;
 
   const handleAdd = () => {
-    setError(null);
-
-    if (cantidad <= 0) {
-      setError('La cantidad debe ser mayor a 0');
-      return;
-    }
-
-    if (cantidad > stockDisponible) {
-      setError(`Stock insuficiente. Disponible: ${stockDisponible}`);
-      return;
-    }
-
-    if (descuentoItem < 0) {
-      setError('El descuento no puede ser negativo');
-      return;
-    }
-
-    if (descuentoItem > subtotalBruto) {
-      setError('El descuento no puede ser mayor al total');
-      return;
-    }
-
-    const item = {
-      producto_id: product.id,
-      nombre: product.nombre,
-      tipo_venta: tipo_venta,
+    if (cantidad <= 0)               return setError('Cantidad inválida');
+    if (descuentoPct < 0 || descuentoPct > 100) return setError('El descuento debe estar entre 0 y 100%');
+    onAdd({
+      producto_id:     product.id,
+      nombre:          product.nombre,
       cantidad,
-      precio_unitario: precioUnitario,
-      subtotal: subtotal,
-      descuento: descuentoItem,
-    };
-
-    onAdd(item);
-    setCantidad(1);
-    setTipo_venta('unidad');
-    setDescuentoItem(0);
+      precio_unitario: precio,
+      subtotal:        total,
+      tipo_venta,
+      descuento:       descuentoAmt,   // seguimos enviando el monto al carrito
+    });
+    onClose();
   };
+
+  const adjust = (delta: number) =>
+    setCantidad((c) => Math.max(0.1, parseFloat((c + delta).toFixed(2))));
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div>
-        <h2 className="text-2xl font-bold mb-4">{product.nombre}</h2>
+      <div className="bg-slate-900 text-white p-6 rounded-2xl w-full max-w-md border border-slate-700 shadow-2xl">
+
+        {/* Header */}
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <Package className="w-5 h-5 text-blue-400" />
+            {product.nombre}
+          </h2>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition-colors"
+          >
+            <X className="w-4 h-4 text-slate-400" />
+          </button>
+        </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-600 rounded">
+          <div className="bg-red-500/20 border border-red-500/30 text-red-400 px-3 py-2 rounded-lg mb-4 text-sm">
             {error}
           </div>
         )}
 
-        <div className="space-y-4">
-          {/* Opciones de venta según categoría */}
-          <div>
-            <label className="block font-semibold mb-2">Tipo de venta:</label>
-            <div className="space-y-2">
-              {/* UNIDAD - Todos pueden vender por unidad */}
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="unidad"
-                  checked={tipo_venta === 'unidad'}
-                  onChange={(e) => setTipo_venta(e.target.value as any)}
-                  className="mr-2"
-                />
-                <span>Por unidad</span>
-              </label>
-
-              {/* KG - Solo mascota y granja */}
-              {puedeVenderPorKg && (
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="kg"
-                    checked={tipo_venta === 'kg'}
-                    onChange={(e) => setTipo_venta(e.target.value as any)}
-                    className="mr-2"
-                  />
-                  <span>Por kilogramo</span>
-                </label>
-              )}
-
-              {/* BOLSA - Solo alimento */}
-              {puedeVenderPorBolsa && (
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="bolsa"
-                    checked={tipo_venta === 'bolsa'}
-                    onChange={(e) => setTipo_venta(e.target.value as any)}
-                    className="mr-2"
-                  />
-                  <span>Bolsa completa ({product.peso_bolsa_kg}kg)</span>
-                </label>
-              )}
-            </div>
+        {/* Tipo de venta */}
+        <div className="mb-5">
+          <label className="text-xs text-slate-400 uppercase tracking-wider mb-2 block">
+            Tipo de venta
+          </label>
+          <div className="flex gap-2">
+            {['unidad', 'kg'].map((t) => (
+              <button
+                key={t}
+                onClick={() => setTipo(t)}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium capitalize transition-colors border
+                  ${tipo_venta === t
+                    ? 'bg-blue-600 border-blue-500 text-white'
+                    : 'bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700'
+                  }`}
+              >
+                {t}
+              </button>
+            ))}
           </div>
+        </div>
 
-          {/* Stock disponible */}
-          <div className="bg-blue-50 p-3 rounded">
-            <p className="font-semibold">
-              Stock disponible: {stockDisponible} {tipo_venta === 'kg' ? 'kg' : 'unid.'}
-            </p>
-          </div>
-
-          {/* Cantidad */}
-          <div>
-            <label className="block font-semibold mb-2">Cantidad:</label>
+        {/* Cantidad */}
+        <div className="mb-5">
+          <label className="text-xs text-slate-400 uppercase tracking-wider mb-2 block">
+            Cantidad
+          </label>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => adjust(-1)}
+              className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-600 hover:bg-slate-700 flex items-center justify-center transition-colors"
+            >
+              <Minus className="w-4 h-4" />
+            </button>
             <input
               type="number"
-              min="0.1"
-              step={tipo_venta === 'kg' ? '0.1' : '1'}
               value={cantidad}
-              onChange={(e) => setCantidad(parseFloat(e.target.value) || 0)}
-              className="w-full px-4 py-2 border border-gray-300 rounded"
+              onChange={(e) => setCantidad(Number(e.target.value))}
+              className="flex-1 bg-slate-800 border border-slate-600 text-center py-2 rounded-lg text-white focus:outline-none focus:border-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              {tipo_venta === 'kg' 
-                ? 'Ingresa en kilogramos (ej: 2, 3.5, etc)' 
-                : 'Ingresa cantidad de unidades'}
-            </p>
+            <button
+              onClick={() => adjust(1)}
+              className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-600 hover:bg-slate-700 flex items-center justify-center transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
           </div>
+        </div>
 
-          {/* Precio unitario */}
-          <div className="bg-gray-50 p-3 rounded">
-            <p>
-              Precio unitario: ${precioUnitario.toFixed(2)} {tipo_venta === 'kg' ? '/kg' : ''}
-            </p>
-          </div>
+        {/* Precio unitario */}
+        <div className="mb-5 flex justify-between items-center text-sm">
+          <span className="text-slate-400">Precio unitario</span>
+          <span className="text-white font-semibold">${precio.toLocaleString('es-AR')}</span>
+        </div>
 
-          {/* Subtotal bruto */}
-          <div className="bg-gray-100 p-3 rounded">
-            <p>Subtotal: ${subtotalBruto.toFixed(2)}</p>
-          </div>
-
-          {/* Descuento por artículo */}
-          <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
-            <label className="block font-semibold mb-2">Descuento (opcional):</label>
+        {/* Descuento % */}
+        <div className="mb-5">
+          <label className="text-xs text-slate-400 uppercase tracking-wider mb-2 block">
+            Descuento (%)
+          </label>
+          <div className="relative">
             <input
               type="number"
               min="0"
-              step="0.01"
-              value={descuentoItem}
-              onChange={(e) => setDescuentoItem(parseFloat(e.target.value) || 0)}
-              className="w-full px-4 py-2 border border-gray-300 rounded"
-              placeholder="0.00"
+              max="100"
+              step="0.5"
+              placeholder="0"
+              value={descuentoPct}
+              onChange={(e) => {
+                const v = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
+                setDescuento(v);
+              }}
+              className="w-full bg-slate-800 border border-slate-600 px-3 py-2 pr-10 rounded-lg text-white focus:outline-none focus:border-amber-500 transition-colors"
             />
-            <p className="text-xs text-gray-500 mt-1">Máximo descuento: ${subtotalBruto.toFixed(2)}</p>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-semibold text-sm">
+              %
+            </span>
           </div>
-
-          {/* Total Final */}
-          <div className="bg-green-100 p-4 rounded border-2 border-green-300">
-            <p className="text-2xl font-bold text-green-800">
-              Total: ${subtotal.toFixed(2)}
+          {/* Presets rápidos */}
+          <div className="flex gap-1.5 mt-2">
+            {[0, 5, 10, 15, 20].map((pct) => (
+              <button
+                key={pct}
+                onClick={() => setDescuento(pct)}
+                className={`flex-1 py-1 rounded text-xs font-medium transition-colors border
+                  ${descuentoPct === pct
+                    ? 'bg-amber-500 border-amber-400 text-white'
+                    : 'bg-slate-800 border-slate-600 text-slate-400 hover:text-white hover:bg-slate-700'
+                  }`}
+              >
+                {pct}%
+              </button>
+            ))}
+          </div>
+          {/* Monto calculado */}
+          {descuentoPct > 0 && (
+            <p className="text-amber-400 text-xs mt-1.5">
+              Descuento: -${descuentoAmt.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
             </p>
-          </div>
+          )}
+        </div>
 
-          {/* Botones */}
-          <div className="flex gap-4 mt-6">
-            <button
-              onClick={handleAdd}
-              className="flex-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-semibold"
-            >
-              ✅ Agregar al carrito
-            </button>
-            <button
-              onClick={onClose}
-              className="flex-1 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-            >
-              ❌ Cancelar
-            </button>
+        {/* Total */}
+        <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-3 mb-5">
+          <div className="flex justify-between items-center">
+            <span className="text-slate-300 font-medium">Total</span>
+            <span className="text-green-400 text-xl font-bold">
+              ${total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+            </span>
           </div>
+          {descuentoPct > 0 && (
+            <p className="text-slate-400 text-xs mt-1 text-right line-through">
+              Precio sin desc.: ${subtotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+            </p>
+          )}
+        </div>
+
+        {/* Botones */}
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-lg bg-slate-800 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors text-sm font-medium"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleAdd}
+            className="flex-1 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors text-sm font-medium flex items-center justify-center gap-2"
+          >
+            <ShoppingCart className="w-4 h-4" />
+            Agregar
+          </button>
         </div>
       </div>
     </Modal>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ShoppingCart, X } from 'lucide-react';
 import ClientInfo from './sales/ClientInfo';
 import PaymentMethodSelector from './sales/PaymentMethodSelector';
 import ProductSearcher from './sales/ProductSearcher';
@@ -7,70 +8,57 @@ import Receipt from './sales/Receipt';
 import api from '../api';
 
 interface SaleItem {
-  producto_id: number;
-  nombre: string;
-  tipo_venta: 'unidad' | 'bolsa' | 'kg';
-  cantidad: number;
+  producto_id:     number;
+  nombre:          string;
+  tipo_venta:      'unidad' | 'bolsa' | 'kg';
+  cantidad:        number;
   precio_unitario: number;
-  subtotal: number;
-  descuento?: number;
+  subtotal:        number;
+  descuento?:      number;
 }
 
 const SalesForm: React.FC = () => {
-  const [clientName, setClientName] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('');
-  const [items, setItems] = useState<SaleItem[]>([]);
+  const [clientName,     setClientName]     = useState('');
+  const [paymentMethod,  setPaymentMethod]  = useState('');
+  const [items,          setItems]          = useState<SaleItem[]>([]);
   const [descuentoTotal, setDescuentoTotal] = useState(0);
-  const [showReceipt, setShowReceipt] = useState(false);
-  const [lastSaleId, setLastSaleId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [showReceipt,    setShowReceipt]    = useState(false);
+  const [lastSaleId,     setLastSaleId]     = useState<number | null>(null);
+  const [loading,        setLoading]        = useState(false);
+  const [error,          setError]          = useState<string | null>(null);
 
-  const total = items.reduce((sum, item) => sum + item.subtotal, 0) - descuentoTotal;
+  const subtotalNeto = items.reduce((s, i) => s + i.subtotal, 0);
+  const total        = subtotalNeto - subtotalNeto * (descuentoTotal / 100);
 
-  const handleAddItem = (item: SaleItem) => {
-    setItems([...items, item]);
-  };
-
-  const handleRemoveItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
+  const handleAddItem    = (item: SaleItem) => setItems((prev) => [...prev, item]);
+  const handleRemoveItem = (index: number)  => setItems((prev) => prev.filter((_, i) => i !== index));
 
   const handleSaveSale = async () => {
-    if (!clientName.trim()) {
-      setError('Por favor ingresa el nombre del cliente');
-      return;
-    }
-    if (!paymentMethod) {
-      setError('Por favor selecciona un método de pago');
-      return;
-    }
-    if (items.length === 0) {
-      setError('Por favor agrega al menos un artículo');
-      return;
-    }
+    if (!clientName.trim())   return setError('Por favor ingresá el nombre del cliente');
+    if (!paymentMethod)        return setError('Por favor seleccioná un método de pago');
+    if (items.length === 0)    return setError('Por favor agregá al menos un artículo');
 
     setLoading(true);
     setError(null);
 
     try {
-      const token = localStorage.getItem('token');
-      const decoded = JSON.parse(atob(token!.split('.')[1]));
+      const token    = localStorage.getItem('token');
+      const decoded  = JSON.parse(atob(token!.split('.')[1]));
       const usuario_id = decoded.id;
 
       const response = await api.post('/ventas', {
-        nombre_cliente: clientName,
-        metodo_pago: paymentMethod,
-        items: items,
+        nombre_cliente:  clientName,
+        metodo_pago:     paymentMethod,
+        items,
         descuento_total: descuentoTotal,
-        total: total,
-        usuario_id: usuario_id,
+        total,
+        usuario_id,
       });
 
       setLastSaleId(response.data.venta_id);
       setShowReceipt(true);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Error al guardar venta');
+      setError(err.response?.data?.error || 'Error al guardar la venta');
     } finally {
       setLoading(false);
     }
@@ -87,61 +75,61 @@ const SalesForm: React.FC = () => {
   };
 
   if (showReceipt && lastSaleId) {
-    return (
-      <Receipt 
-        saleId={lastSaleId} 
-        onNewSale={handleNewSale} 
-      />
-    );
+    return <Receipt saleId={lastSaleId} onNewSale={handleNewSale} />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-2 md:p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Título */}
-        <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-4 md:mb-8">
-          💳 Formulario de Ventas
+    <div className="min-h-screen bg-slate-900 text-white">
+
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+        <h1 className="text-2xl font-bold flex items-center gap-3">
+          <ShoppingCart className="w-6 h-6 text-blue-400" />
+          Nueva Venta
         </h1>
+        <button
+          onClick={handleNewSale}
+          className="w-9 h-9 rounded-full bg-slate-700 hover:bg-slate-600 border border-slate-600 flex items-center justify-center transition-colors"
+        >
+          <X className="w-4 h-4 text-slate-300" />
+        </button>
+      </div>
+
+      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-5">
 
         {/* Error */}
         {error && (
-          <div className="mb-4 p-3 md:p-4 bg-red-600 text-white rounded text-sm md:text-base">
+          <div className="px-4 py-3 bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl text-sm">
             {error}
           </div>
         )}
 
-        {/* Layout responsivo */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
-          {/* Columna izquierda: Info cliente y método pago */}
-          <div className="lg:col-span-1 space-y-4">
-            <ClientInfo 
-              clientName={clientName}
-              setClientName={setClientName}
-            />
-            <PaymentMethodSelector 
-              paymentMethod={paymentMethod}
-              setPaymentMethod={setPaymentMethod}
-            />
-          </div>
-
-          {/* Columna central/derecha: Buscador */}
-          <div className="lg:col-span-2">
-            <ProductSearcher onAddItem={handleAddItem} />
-          </div>
-        </div>
-
-        {/* Carrito - Ancho completo */}
-        <div>
-          <SalesCart 
-            items={items}
-            descuentoTotal={descuentoTotal}
-            setDescuentoTotal={setDescuentoTotal}
-            onRemoveItem={handleRemoveItem}
-            total={total}
-            onSave={handleSaveSale}
-            loading={loading}
+        {/* ── Fila superior: Cliente + Método de pago ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <ClientInfo
+            clientName={clientName}
+            setClientName={setClientName}
+          />
+          <PaymentMethodSelector
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
           />
         </div>
+
+        {/* ── Buscador de productos ── */}
+        <ProductSearcher onAddItem={handleAddItem} />
+
+        {/* ── Carrito ── */}
+        <SalesCart
+          items={items}
+          descuentoTotal={descuentoTotal}
+          setDescuentoTotal={setDescuentoTotal}
+          onRemoveItem={handleRemoveItem}
+          total={total}
+          onSave={handleSaveSale}
+          loading={loading}
+        />
+
       </div>
     </div>
   );

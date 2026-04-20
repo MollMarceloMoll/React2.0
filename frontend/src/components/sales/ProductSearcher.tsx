@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Search, Package } from 'lucide-react';
 import api from '../../api';
 import SaleItemModal from './SaleItemModal';
 
@@ -18,21 +19,17 @@ interface ProductSearcherProps {
 }
 
 const ProductSearcher: React.FC<ProductSearcherProps> = ({ onAddItem }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [products, setProducts] = useState<Product[]>([]);
+  const [searchQuery, setSearchQuery]       = useState('');
+  const [products, setProducts]             = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal]           = useState(false);
+  const [loading, setLoading]               = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searchQuery.length >= 2) {
-        handleSearch();
-      } else {
-        setProducts([]);
-      }
+      if (searchQuery.length >= 2) handleSearch();
+      else setProducts([]);
     }, 300);
-
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -54,41 +51,51 @@ const ProductSearcher: React.FC<ProductSearcherProps> = ({ onAddItem }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-xl font-bold mb-4">🔍 Buscar Artículos</h2>
-      
-      <input
-        type="text"
-        placeholder="Busca por nombre..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 mb-4"
-      />
+    <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+      <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <Search className="w-5 h-5 text-blue-400" />
+        Buscar Artículos
+      </h2>
 
-      {loading && <p className="text-gray-500">Buscando...</p>}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <input
+          type="text"
+          placeholder="Busca por nombre..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+        />
+      </div>
+
+      {loading && (
+        <p className="text-slate-400 text-sm text-center py-2">Buscando...</p>
+      )}
 
       {products.length > 0 && (
-        <div className="max-h-96 overflow-y-auto border border-gray-200 rounded">
+        <div className="max-h-80 overflow-y-auto rounded-lg border border-slate-600 divide-y divide-slate-700">
           {products.map((product) => (
             <div
               key={product.id}
               onClick={() => handleSelectProduct(product)}
-              className="p-4 border-b hover:bg-blue-50 cursor-pointer transition"
+              className="flex items-center justify-between p-3 hover:bg-slate-700 cursor-pointer transition-colors"
             >
-              <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center shrink-0">
+                  <Package className="w-4 h-4 text-slate-300" />
+                </div>
                 <div>
-                  <h3 className="font-semibold">{product.nombre}</h3>
-                  <p className="text-sm text-gray-500">Categoría: {product.categoria}</p>
+                  <p className="text-white font-medium text-sm">{product.nombre}</p>
+                  <p className="text-slate-400 text-xs">{product.categoria}</p>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold">${product.precio_venta}</p>
-                  <p className="text-xs text-gray-500">
-                    {product.categoria === 'alimento' 
-                      ? `Stock: ${product.stock_kg}kg` 
-                      : `Stock: ${product.stock_unidades} unid.`
-                    }
-                  </p>
-                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-white font-semibold text-sm">${product.precio_venta}</p>
+                <p className="text-slate-400 text-xs">
+                  {product.categoria === 'alimento'
+                    ? `${product.stock_kg} kg`
+                    : `${product.stock_unidades} unid.`}
+                </p>
               </div>
             </div>
           ))}
@@ -96,7 +103,9 @@ const ProductSearcher: React.FC<ProductSearcherProps> = ({ onAddItem }) => {
       )}
 
       {searchQuery.length >= 2 && products.length === 0 && !loading && (
-        <p className="text-gray-500 text-center py-4">No se encontraron artículos</p>
+        <p className="text-slate-400 text-sm text-center py-4">
+          No se encontraron artículos
+        </p>
       )}
 
       {selectedProduct && (
@@ -104,7 +113,7 @@ const ProductSearcher: React.FC<ProductSearcherProps> = ({ onAddItem }) => {
           product={selectedProduct}
           isOpen={showModal}
           onClose={() => setShowModal(false)}
-          onAdd={(item) => {
+          onAdd={(item: any) => {
             onAddItem(item);
             setShowModal(false);
             setSearchQuery('');

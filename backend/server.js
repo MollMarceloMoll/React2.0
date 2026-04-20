@@ -5,6 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import loginRouter from "./routes/login.js";
 import ventasRouter from "./routes/ventas.js";
+import reportesRouter from "./routes/reportes.js";
 
 dotenv.config(); // lee las variables del archivo .env
 
@@ -13,6 +14,7 @@ const app = express();
 app.use(cors()); // permite que el forntend se conecte al backend
 app.use(express.json()); // para leer el JSON en requests
 app.use("/api/ventas", ventasRouter);
+app.use("/api/reportes", reportesRouter);
 
 // Conexion a MySQL
 const db = await mysql.createConnection({
