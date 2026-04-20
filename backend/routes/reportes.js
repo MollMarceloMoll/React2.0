@@ -4,62 +4,105 @@ import db from "../db.js";
 const router = express.Router();
 
 // Helper: fechas según periodo
-function getFechaDesde(periodo) {
+function getFechaDesde(periodo, desde, hasta) {
   const now = new Date();
+  
+  if (periodo === "personalizado" && desde && hasta) {
+    return { desde: new Date(desde), hasta: new Date(hasta) };
+  }
+  
   switch (periodo) {
     case "hoy":
-      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const hoy = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return { desde: hoy, hasta: now };
     case "7d":
-      return new Date(now - 7 * 24 * 60 * 60 * 1000);
+      return { desde: new Date(now - 7 * 24 * 60 * 60 * 1000), hasta: now };
     case "mes":
-      return new Date(now.getFullYear(), now.getMonth(), 1);
+      const primerDia = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { desde: primerDia, hasta: now };
     case "año":
-      return new Date(now.getFullYear(), 0, 1);
+      const primerDiaAño = new Date(now.getFullYear(), 0, 1);
+      return { desde: primerDiaAño, hasta: now };
     default:
-      return new Date(now - 7 * 24 * 60 * 60 * 1000);
+      return { desde: new Date(now - 7 * 24 * 60 * 60 * 1000), hasta: now };
   }
 }
 
-// GET /api/reportes/resumen?periodo=7d
+// GET /api/reportes/resumen
 router.get("/resumen", async (req, res) => {
   try {
-    const { periodo = "7d" } = req.query;
-    const desde = getFechaDesde(periodo);
+    const { periodo = "7d", desde, hasta } = req.query;
+    const { desde: fechaDesde, hasta: fechaHasta } = getFechaDesde(periodo, desde, hasta);
 
     const [rows] = await db.query(
       `SELECT 
         COUNT(*) as total_ventas,
-        COALESCE(SUM(total), 0) as ganancia_total,
-        COALESCE(AVG(total), 0) as ticket_promedio,
-        COALESCE(SUM(descuento_total), 0) as descuentos_total
-       FROM ventas 
-       WHERE estado = 'completada' AND fecha >= ?`,
-      [desde]
+        COALESCE(SUM(v.total), 0) as ganancia_total,
+        COALESCE(AVG(v.total), 0) as ticket_promedio,
+        COALESCE(SUM(v.descuento_total), 0) as descuentos_total,
+        COALESCE(SUM(
+          vd.cantidad * (p.precio_venta - p.precio_compra)
+        ), 0) as ganancia_real_unitaria,
+        COALESCE(SUM(
+          (vd.cantidad / NULLIF(p.peso_bolsa_kg, 0)) * (p.precio_venta_kg - (p.precio_compra / NULLIF(p.peso_bolsa_kg, 0)))
+        ), 0) as ganancia_real_por_kilo
+       FROM ventas v
+       LEFT JOIN ventas_detalle vd ON v.id = vd.venta_id
+       LEFT JOIN productos p ON vd.producto_id = p.id
+       WHERE v.estado = 'completada' AND v.fecha >= ? AND v.fecha <= ?`,
+      [fechaDesde, fechaHasta]
     );
 
-    res.json(rows[0]);
+    if (rows.length > 0) {
+      const resumen = {
+        total_ventas: rows.reduce((acc, r) => acc + r.total_ventas, 0),
+        ganancia_total: rows.reduce((acc, r) => acc + parseFloat(r.ganancia_total), 0),
+        ticket_promedio: rows.reduce((acc, r) => acc + parseFloat(r.ticket_promedio), 0) / rows.length,
+        descuentos_total: rows.reduce((acc, r) => acc + parseFloat(r.descuentos_total), 0),
+        ganancia_real_unitaria: rows.reduce((acc, r) => acc + parseFloat(r.ganancia_real_unitaria), 0),
+        ganancia_real_por_kilo: rows.reduce((acc, r) => acc + parseFloat(r.ganancia_real_por_kilo), 0)
+      };
+      res.json(resumen);
+    } else {
+      res.json({
+        total_ventas: 0,
+        ganancia_total: 0,
+        ticket_promedio: 0,
+        descuentos_total: 0,
+        ganancia_real_unitaria: 0,
+        ganancia_real_por_kilo: 0
+      });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al obtener resumen" });
   }
 });
 
-// GET /api/reportes/grafico?periodo=7d
+// GET /api/reportes/grafico
 router.get("/grafico", async (req, res) => {
   try {
-    const { periodo = "7d" } = req.query;
-    const desde = getFechaDesde(periodo);
+    const { periodo = "7d", desde, hasta } = req.query;
+    const { desde: fechaDesde, hasta: fechaHasta } = getFechaDesde(periodo, desde, hasta);
 
     const [rows] = await db.query(
       `SELECT 
-        DATE(fecha) as fecha,
-        COALESCE(SUM(total), 0) as ganancia,
-        COUNT(*) as ventas
-       FROM ventas
-       WHERE estado = 'completada' AND fecha >= ?
-       GROUP BY DATE(fecha)
+        DATE(v.fecha) as fecha,
+        COALESCE(SUM(v.total), 0) as ingresos,
+        COUNT(*) as ventas,
+        COALESCE(SUM(
+          vd.cantidad * (p.precio_venta - p.precio_compra)
+        ), 0) as ganancia_real_unitaria,
+        COALESCE(SUM(
+          (vd.cantidad / NULLIF(p.peso_bolsa_kg, 0)) * (p.precio_venta_kg - (p.precio_compra / NULLIF(p.peso_bolsa_kg, 0)))
+        ), 0) as ganancia_real_por_kilo
+       FROM ventas v
+       LEFT JOIN ventas_detalle vd ON v.id = vd.venta_id
+       LEFT JOIN productos p ON vd.producto_id = p.id
+       WHERE v.estado = 'completada' AND v.fecha >= ? AND v.fecha <= ?
+       GROUP BY DATE(v.fecha)
        ORDER BY fecha ASC`,
-      [desde]
+      [fechaDesde, fechaHasta]
     );
 
     res.json(rows);
@@ -69,27 +112,38 @@ router.get("/grafico", async (req, res) => {
   }
 });
 
-// GET /api/reportes/top-productos?periodo=7d&limit=5
+// GET /api/reportes/top-productos
 router.get("/top-productos", async (req, res) => {
   try {
-    const { periodo = "7d", limit = 5 } = req.query;
-    const desde = getFechaDesde(periodo);
+    const { periodo = "7d", desde, hasta, limit = 5 } = req.query;
+    const { desde: fechaDesde, hasta: fechaHasta } = getFechaDesde(periodo, desde, hasta);
 
     const [rows] = await db.query(
       `SELECT 
+        p.id,
         p.nombre,
         p.categoria,
+        p.precio_venta,
+        p.precio_compra,
+        p.precio_venta_kg,
+        p.peso_bolsa_kg,
         SUM(vd.cantidad) as total_cantidad,
         SUM(vd.subtotal) as total_ingresos,
-        COUNT(DISTINCT vd.venta_id) as num_ventas
+        COUNT(DISTINCT vd.venta_id) as num_ventas,
+        COALESCE(SUM(
+          vd.cantidad * (p.precio_venta - p.precio_compra)
+        ), 0) as ganancia_real_unitaria,
+        COALESCE(SUM(
+          (vd.cantidad / NULLIF(p.peso_bolsa_kg, 0)) * (p.precio_venta_kg - (p.precio_compra / NULLIF(p.peso_bolsa_kg, 0)))
+        ), 0) as ganancia_real_por_kilo
        FROM ventas_detalle vd
        JOIN productos p ON vd.producto_id = p.id
        JOIN ventas v ON vd.venta_id = v.id
-       WHERE v.estado = 'completada' AND v.fecha >= ?
-       GROUP BY p.id, p.nombre, p.categoria
+       WHERE v.estado = 'completada' AND v.fecha >= ? AND v.fecha <= ?
+       GROUP BY p.id, p.nombre, p.categoria, p.precio_venta, p.precio_compra, p.precio_venta_kg, p.peso_bolsa_kg
        ORDER BY total_cantidad DESC
        LIMIT ?`,
-      [desde, parseInt(limit)]
+      [fechaDesde, fechaHasta, parseInt(limit)]
     );
 
     res.json(rows);
@@ -99,7 +153,7 @@ router.get("/top-productos", async (req, res) => {
   }
 });
 
-// GET /api/reportes/actividad-reciente?limit=10
+// GET /api/reportes/actividad-reciente
 router.get("/actividad-reciente", async (req, res) => {
   try {
     const { limit = 10 } = req.query;
@@ -127,21 +181,26 @@ router.get("/actividad-reciente", async (req, res) => {
   }
 });
 
-// GET /api/reportes/ventas-por-metodo?periodo=7d
+// GET /api/reportes/ventas-por-metodo
 router.get("/ventas-por-metodo", async (req, res) => {
   try {
-    const { periodo = "7d" } = req.query;
-    const desde = getFechaDesde(periodo);
+    const { periodo = "7d", desde, hasta } = req.query;
+    const { desde: fechaDesde, hasta: fechaHasta } = getFechaDesde(periodo, desde, hasta);
 
     const [rows] = await db.query(
       `SELECT 
         metodo_pago,
         COUNT(*) as cantidad,
-        SUM(total) as total
-       FROM ventas
-       WHERE estado = 'completada' AND fecha >= ?
+        SUM(total) as total,
+        COALESCE(SUM(
+          vd.cantidad * (p.precio_venta - p.precio_compra)
+        ), 0) as ganancia_real_unitaria
+       FROM ventas v
+       LEFT JOIN ventas_detalle vd ON v.id = vd.venta_id
+       LEFT JOIN productos p ON vd.producto_id = p.id
+       WHERE v.estado = 'completada' AND v.fecha >= ? AND v.fecha <= ?
        GROUP BY metodo_pago`,
-      [desde]
+      [fechaDesde, fechaHasta]
     );
 
     res.json(rows);
