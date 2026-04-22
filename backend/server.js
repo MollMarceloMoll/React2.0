@@ -156,10 +156,10 @@ app.use("/api", loginRouter);
 
 // Iniciamos el servidor
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000; // Railway pasará el puerto aquí
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
+  console.log(`Servidor activo en puerto ${PORT}`);
 });
 
 //const PORT = process.env.PORT || 3000;
