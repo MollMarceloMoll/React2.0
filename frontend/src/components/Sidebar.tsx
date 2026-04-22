@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -17,9 +17,19 @@ import {
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, onNuevo }) => {
   const [nuevoOpen, setNuevoOpen] = useState(false);
+  const navigate = useNavigate();
 
   const menuItem =
     "flex items-center gap-3 p-2 rounded-xl text-sm text-gray-300 hover:bg-slate-800 hover:text-white transition";
+
+  const handleLogout = () => {
+    // Limpiar datos de sesión (localStorage, sessionStorage, etc.)
+    localStorage.removeItem("token"); // O el nombre que uses para guardar el token
+    sessionStorage.clear(); // Limpiar todo el sessionStorage
+    
+    // Redirigir a la página de login
+    navigate("/login");
+  };
 
   return (
     <aside
@@ -52,7 +62,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, onNuevo }) => {
 
         <Link to="/dashboard" className={menuItem}>
           <LayoutDashboard className="w-5 h-5" />
-          {sidebarOpen && "Dashboard"}
+          {sidebarOpen && "Inicio"}
         </Link>
 
         <Link to="/productos" className={menuItem}>
@@ -141,7 +151,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, onNuevo }) => {
 
       {/* FOOTER */}
       <div className="p-3 border-t border-slate-800">
-        <button className="flex items-center gap-2 w-full p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition">
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-2 w-full p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition"
+        >
           <LogOut className="w-4 h-4" />
           {sidebarOpen && "Cerrar sesión"}
         </button>
