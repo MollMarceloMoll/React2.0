@@ -5,12 +5,19 @@ import loginRouter from "./routes/login.js";
 import ventasRouter from "./routes/ventas.js";
 import reportesRouter from "./routes/reportes.js";
 import usuariosRouter from "./routes/usuarios.js";
-import pool from './db.js'; // Usaremos este para TODO
+import pool from './db.js'; 
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// --- CONFIGURACIÓN DE CORS MEJORADA ---
+app.use(cors({
+    origin: "https://react2-0-mu.vercel.app/login", // En producción puedes cambiar "*" por tu URL de Vercel para más seguridad
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
 
 // Rutas externas
@@ -19,7 +26,7 @@ app.use("/api/reportes", reportesRouter);
 app.use("/api", loginRouter);
 app.use("/api/usuarios", usuariosRouter);
 
-// --- RUTAS DE PRODUCTOS (Cambiadas de 'db' a 'pool') ---
+// --- RUTAS DE PRODUCTOS ---
 
 app.get("/api/productos", async(req, res) => {
     try {
@@ -70,8 +77,12 @@ app.post("/api/productos", async (req, res) => {
     }
 });
 
-// --- PUERTO Y ARRANQUE ---
+// Ruta raíz para evitar el "Cannot GET /"
+app.get("/", (req, res) => {
+    res.send("Servidor de Programa Ventas (Railway) activo 🚀");
+});
 
+// --- PUERTO Y ARRANQUE ---
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, '0.0.0.0', () => {
