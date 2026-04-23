@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../api';
 import {
   User,
@@ -158,7 +158,6 @@ const Usuarios = () => {
         currentPassword: emailForm.currentPassword
       });
 
-      // Actualizar el correo mostrado
       setCurrentEmail(emailForm.newEmail);
 
       setSuccess({
@@ -224,72 +223,6 @@ const Usuarios = () => {
     setErrors({});
     setSuccess({ type: null, message: '' });
   };
-
-  // Componente de campo de entrada reutilizable
-  const FormField = ({
-    label,
-    name,
-    type = 'text',
-    value,
-    onChange,
-    error,
-    placeholder,
-    showToggle = false,
-    showPassword = false,
-    onTogglePassword = () => {}
-  }: {
-    label: string;
-    name: string;
-    type?: string;
-    value: string;
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    error?: string;
-    placeholder?: string;
-    showToggle?: boolean;
-    showPassword?: boolean;
-    onTogglePassword?: () => void;
-  }) => (
-    <div className="mb-5">
-      <label htmlFor={name} className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-        {label}
-      </label>
-      <div className="relative">
-        <input
-          id={name}
-          name={name}
-          type={showToggle && showPassword ? 'text' : type}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          className={`w-full px-4 py-2.5 rounded-lg border transition duration-200 outline-none
-            ${error 
-              ? 'border-red-400 bg-red-50 dark:bg-red-950 dark:border-red-600 focus:ring-2 focus:ring-red-300 dark:focus:ring-red-700' 
-              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500'
-            }
-          `}
-        />
-        {showToggle && (
-          <button
-            type="button"
-            onClick={onTogglePassword}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
-          >
-            {showPassword ? (
-              <EyeOff className="w-5 h-5" />
-            ) : (
-              <Eye className="w-5 h-5" />
-            )}
-          </button>
-        )}
-      </div>
-      {error && (
-        <p className="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-          <AlertCircle className="w-4 h-4" />
-          {error}
-        </p>
-      )}
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 py-8">
@@ -394,31 +327,72 @@ const Usuarios = () => {
                   </div>
 
                   {/* Nuevo correo */}
-                  <FormField
-                    label="Nuevo Correo Electrónico"
-                    name="newEmail"
-                    type="email"
-                    value={emailForm.newEmail}
-                    onChange={handleEmailChange}
-                    error={errors.newEmail}
-                    placeholder="ejemplo@correo.com"
-                  />
+                  <div className="mb-5">
+                    <label htmlFor="newEmail" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      Nuevo Correo Electrónico
+                    </label>
+                    <input
+                      id="newEmail"
+                      name="newEmail"
+                      type="email"
+                      value={emailForm.newEmail}
+                      onChange={handleEmailChange}
+                      placeholder="ejemplo@correo.com"
+                      className={`w-full px-4 py-2.5 rounded-lg border transition duration-200 outline-none
+                        ${errors.newEmail 
+                          ? 'border-red-400 bg-red-50 dark:bg-red-950 dark:border-red-600 focus:ring-2 focus:ring-red-300 dark:focus:ring-red-700' 
+                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500'
+                        }
+                      `}
+                    />
+                    {errors.newEmail && (
+                      <p className="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.newEmail}
+                      </p>
+                    )}
+                  </div>
 
                   {/* Contraseña actual */}
-                  <FormField
-                    label="Contraseña Actual (confirmación)"
-                    name="currentPassword"
-                    type="password"
-                    value={emailForm.currentPassword}
-                    onChange={handleEmailChange}
-                    error={errors.currentPassword}
-                    placeholder="Ingresa tu contraseña"
-                    showToggle={true}
-                    showPassword={showPasswords.current}
-                    onTogglePassword={() => 
-                      setShowPasswords(prev => ({ ...prev, current: !prev.current }))
-                    }
-                  />
+                  <div className="mb-5">
+                    <label htmlFor="emailCurrentPassword" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      Contraseña Actual (confirmación)
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="emailCurrentPassword"
+                        name="currentPassword"
+                        type={showPasswords.current ? 'text' : 'password'}
+                        value={emailForm.currentPassword}
+                        onChange={handleEmailChange}
+                        placeholder="Ingresa tu contraseña"
+                        autoComplete="current-password"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition duration-200 outline-none
+                          ${errors.currentPassword 
+                            ? 'border-red-400 bg-red-50 dark:bg-red-950 dark:border-red-600 focus:ring-2 focus:ring-red-300 dark:focus:ring-red-700' 
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500'
+                          }
+                        `}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
+                      >
+                        {showPasswords.current ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    {errors.currentPassword && (
+                      <p className="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.currentPassword}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Botones de acción */}
@@ -463,36 +437,86 @@ const Usuarios = () => {
               <form onSubmit={handlePasswordSubmit}>
                 <div className="space-y-6">
                   {/* Contraseña actual */}
-                  <FormField
-                    label="Contraseña Actual"
-                    name="currentPassword"
-                    type="password"
-                    value={passwordForm.currentPassword}
-                    onChange={handlePasswordChange}
-                    error={errors.currentPassword}
-                    placeholder="Ingresa tu contraseña actual"
-                    showToggle={true}
-                    showPassword={showPasswords.current}
-                    onTogglePassword={() => 
-                      setShowPasswords(prev => ({ ...prev, current: !prev.current }))
-                    }
-                  />
+                  <div className="mb-5">
+                    <label htmlFor="passwordCurrentPassword" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      Contraseña Actual
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="passwordCurrentPassword"
+                        name="currentPassword"
+                        type={showPasswords.current ? 'text' : 'password'}
+                        value={passwordForm.currentPassword}
+                        onChange={handlePasswordChange}
+                        placeholder="Ingresa tu contraseña actual"
+                        autoComplete="current-password"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition duration-200 outline-none
+                          ${errors.currentPassword 
+                            ? 'border-red-400 bg-red-50 dark:bg-red-950 dark:border-red-600 focus:ring-2 focus:ring-red-300 dark:focus:ring-red-700' 
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500'
+                          }
+                        `}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
+                      >
+                        {showPasswords.current ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    {errors.currentPassword && (
+                      <p className="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.currentPassword}
+                      </p>
+                    )}
+                  </div>
 
                   {/* Nueva contraseña */}
-                  <FormField
-                    label="Nueva Contraseña"
-                    name="newPassword"
-                    type="password"
-                    value={passwordForm.newPassword}
-                    onChange={handlePasswordChange}
-                    error={errors.newPassword}
-                    placeholder="Mínimo 8 caracteres"
-                    showToggle={true}
-                    showPassword={showPasswords.new}
-                    onTogglePassword={() => 
-                      setShowPasswords(prev => ({ ...prev, new: !prev.new }))
-                    }
-                  />
+                  <div className="mb-5">
+                    <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      Nueva Contraseña
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="newPassword"
+                        name="newPassword"
+                        type={showPasswords.new ? 'text' : 'password'}
+                        value={passwordForm.newPassword}
+                        onChange={handlePasswordChange}
+                        placeholder="Mínimo 8 caracteres"
+                        autoComplete="new-password"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition duration-200 outline-none
+                          ${errors.newPassword 
+                            ? 'border-red-400 bg-red-50 dark:bg-red-950 dark:border-red-600 focus:ring-2 focus:ring-red-300 dark:focus:ring-red-700' 
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500'
+                          }
+                        `}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords(prev => ({ ...prev, new: !prev.new }))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
+                      >
+                        {showPasswords.new ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    {errors.newPassword && (
+                      <p className="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.newPassword}
+                      </p>
+                    )}
+                  </div>
 
                   {/* Requisitos de contraseña */}
                   {passwordForm.newPassword && (
@@ -521,20 +545,45 @@ const Usuarios = () => {
                   )}
 
                   {/* Confirmar contraseña */}
-                  <FormField
-                    label="Confirmar Nueva Contraseña"
-                    name="confirmPassword"
-                    type="password"
-                    value={passwordForm.confirmPassword}
-                    onChange={handlePasswordChange}
-                    error={errors.confirmPassword}
-                    placeholder="Repite tu nueva contraseña"
-                    showToggle={true}
-                    showPassword={showPasswords.confirm}
-                    onTogglePassword={() => 
-                      setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))
-                    }
-                  />
+                  <div className="mb-5">
+                    <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      Confirmar Nueva Contraseña
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type={showPasswords.confirm ? 'text' : 'password'}
+                        value={passwordForm.confirmPassword}
+                        onChange={handlePasswordChange}
+                        placeholder="Repite tu nueva contraseña"
+                        autoComplete="new-password"
+                        className={`w-full px-4 py-2.5 rounded-lg border transition duration-200 outline-none
+                          ${errors.confirmPassword 
+                            ? 'border-red-400 bg-red-50 dark:bg-red-950 dark:border-red-600 focus:ring-2 focus:ring-red-300 dark:focus:ring-red-700' 
+                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500'
+                          }
+                        `}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
+                      >
+                        {showPasswords.confirm ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    {errors.confirmPassword && (
+                      <p className="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.confirmPassword}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Botones de acción */}

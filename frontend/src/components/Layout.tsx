@@ -34,7 +34,7 @@ export default function Layout() {
     setCargando(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:3000/api/productos");
+      const response = await fetch("http://localhost:4000/api/productos");
       if (!response.ok) throw new Error("Error al cargar");
       const datos = await response.json();
       setProductos(datos);
@@ -64,8 +64,8 @@ export default function Layout() {
     try {
       const esEdicion = !!data.id;
       const url = esEdicion
-        ? `http://localhost:3000/api/productos/${data.id}`
-        : "http://localhost:3000/api/productos";
+        ? `http://localhost:4000/api/productos/${data.id}`
+        : "http://localhost:4000/api/productos";
       const method = esEdicion ? "PUT" : "POST";
 
       const response = await fetch(url, {
