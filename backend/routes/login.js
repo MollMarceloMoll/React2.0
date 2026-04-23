@@ -1,7 +1,7 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import db from "../db.js"; // tu conexión a MySQL
+import db from "../db.js";
 
 const router = express.Router();
 
@@ -26,11 +26,16 @@ router.post("/login", async (req, res) => {
     // Generar token JWT
     const token = jwt.sign(
       { id: user.id, usuario: user.usuario, role: user.role },
-      "secreto", // clave privada, cámbiala por una más segura
+      process.env.JWT_SECRET || "secreto",
       { expiresIn: "1h" }
     );
 
-    res.json({ token });
+    // ✅ DEVOLVER TAMBIÉN EL userId
+    res.json({ 
+      token,
+      userId: user.id,
+      usuario: user.usuario
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error en el servidor" });

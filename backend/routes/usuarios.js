@@ -32,6 +32,27 @@ const passwordChangeSchema = Joi.object({
   confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required()
 });
 
+// Obtener datos del usuario actual
+router.get('/me', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const [users] = await pool.query(
+      'SELECT id, usuario, email FROM usuarios WHERE id = ?',
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    res.json(users[0]);
+  } catch (error) {
+    console.error('Error al obtener usuario:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // Cambiar correo electrónico
 router.post('/change-email', authenticateToken, async (req, res) => {
   try {

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../api';
 import {
   User,
   Mail,
@@ -45,6 +46,30 @@ const Usuarios = () => {
   });
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
+  
+  // Estados para cargar el usuario actual
+  const [currentEmail, setCurrentEmail] = useState('');
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [userError, setUserError] = useState('');
+
+  // Cargar el usuario actual cuando el componente se monta
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        setLoadingUser(true);
+        setUserError('');
+        const response = await api.get('/usuarios/me');
+        setCurrentEmail(response.data.email);
+      } catch (error: any) {
+        console.error('Error al obtener usuario:', error);
+        setUserError('Error al cargar el correo electrónico');
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   // Validaciones
   const validateEmail = (email: string): boolean => {
@@ -53,7 +78,6 @@ const Usuarios = () => {
   };
 
   const validatePassword = (password: string): boolean => {
-    // Mínimo 8 caracteres, al menos una mayúscula, una minúscula, un número y un símbolo
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     return passwordRegex.test(password);
   };
@@ -65,7 +89,7 @@ const Usuarios = () => {
       newErrors.newEmail = 'El correo electrónico es requerido';
     } else if (!validateEmail(emailForm.newEmail)) {
       newErrors.newEmail = 'Ingresa un correo electrónico válido';
-    } else if (emailForm.newEmail === 'usuario@ejemplo.com') {
+    } else if (emailForm.newEmail === currentEmail) {
       newErrors.newEmail = 'El nuevo correo debe ser diferente al actual';
     }
 
@@ -123,92 +147,71 @@ const Usuarios = () => {
     }
   };
 
-const handleEmailSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!validateEmailForm()) return;
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateEmailForm()) return;
 
-  setLoading(true);
-  try {
-    const response = await fetch('http://localhost:4000/api/usuarios/change-email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-id': localStorage.getItem('userId') || ''
-      },
-      body: JSON.stringify({
+    setLoading(true);
+    try {
+      await api.post('/usuarios/change-email', {
         newEmail: emailForm.newEmail,
         currentPassword: emailForm.currentPassword
-      })
-    });
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      setErrors({ submit: errorData.error });
-      return;
+      // Actualizar el correo mostrado
+      setCurrentEmail(emailForm.newEmail);
+
+      setSuccess({
+        type: 'email',
+        message: 'Correo electrónico actualizado exitosamente'
+      });
+      
+      setEmailForm({ newEmail: '', currentPassword: '' });
+      
+      setTimeout(() => {
+        setSuccess({ type: null, message: '' });
+      }, 4000);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Error al actualizar el correo. Intenta de nuevo.';
+      setErrors({ submit: errorMessage });
+    } finally {
+      setLoading(false);
     }
+  };
 
-    setSuccess({
-      type: 'email',
-      message: 'Correo electrónico actualizado exitosamente'
-    });
-    
-    setEmailForm({ newEmail: '', currentPassword: '' });
-    
-    setTimeout(() => {
-      setSuccess({ type: null, message: '' });
-    }, 4000);
-  } catch (error) {
-    setErrors({ submit: 'Error al actualizar el correo. Intenta de nuevo.' });
-  } finally {
-    setLoading(false);
-  }
-};
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validatePasswordForm()) return;
 
-const handlePasswordSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!validatePasswordForm()) return;
-
-  setLoading(true);
-  try {
-    const response = await fetch('http://localhost:4000/api/usuarios/change-password', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-id': localStorage.getItem('userId') || ''
-      },
-      body: JSON.stringify({
+    setLoading(true);
+    try {
+      await api.post('/usuarios/change-password', {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword,
         confirmPassword: passwordForm.confirmPassword
-      })
-    });
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      setErrors({ submit: errorData.error });
-      return;
+      setSuccess({
+        type: 'password',
+        message: 'Contraseña actualizada exitosamente'
+      });
+      
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      
+      setTimeout(() => {
+        setSuccess({ type: null, message: '' });
+      }, 4000);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Error al actualizar la contraseña. Intenta de nuevo.';
+      setErrors({ submit: errorMessage });
+    } finally {
+      setLoading(false);
     }
-
-    setSuccess({
-      type: 'password',
-      message: 'Contraseña actualizada exitosamente'
-    });
-    
-    setPasswordForm({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
-    
-    setTimeout(() => {
-      setSuccess({ type: null, message: '' });
-    }, 4000);
-  } catch (error) {
-    setErrors({ submit: 'Error al actualizar la contraseña. Intenta de nuevo.' });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const resetEmailForm = () => {
     setEmailForm({ newEmail: '', currentPassword: '' });
@@ -358,6 +361,14 @@ const handlePasswordSubmit = async (e: React.FormEvent) => {
               </div>
             )}
 
+            {/* Mensaje de error al cargar usuario */}
+            {errors.submit && (
+              <div className="mb-6 p-4 rounded-lg flex items-center gap-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-200">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <span className="font-medium">{errors.submit}</span>
+              </div>
+            )}
+
             {/* Formulario de correo electrónico */}
             {activeTab === 'profile' && (
               <form onSubmit={handleEmailSubmit}>
@@ -367,9 +378,19 @@ const handlePasswordSubmit = async (e: React.FormEvent) => {
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                       Correo electrónico actual
                     </p>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                      usuario@ejemplo.com
-                    </p>
+                    {loadingUser ? (
+                      <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                        Cargando...
+                      </p>
+                    ) : userError ? (
+                      <p className="text-lg font-semibold text-red-600 dark:text-red-400">
+                        {userError}
+                      </p>
+                    ) : (
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {currentEmail || 'No disponible'}
+                      </p>
+                    )}
                   </div>
 
                   {/* Nuevo correo */}
@@ -493,7 +514,7 @@ const handlePasswordSubmit = async (e: React.FormEvent) => {
                           <span>✓</span> Un número {/\d/.test(passwordForm.newPassword) && '✔'}
                         </li>
                         <li className={`flex items-center gap-2 ${/@$!%*?&/.test(passwordForm.newPassword) ? 'text-green-600 dark:text-green-400' : ''}`}>
-                          <span>✓</span> Un símbolo (@$!%*?&) {/[@$!%*?&]/.test()(passwordForm.newPassword) && '✔'}
+                          <span>✓</span> Un símbolo (@$!%*?&) {/[@$!%*?&]/.test(passwordForm.newPassword) && '✔'}
                         </li>
                       </ul>
                     </div>

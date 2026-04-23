@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000/api", // tu backend Express
+  baseURL: "http://localhost:4000/api", // tu backend Express
 });
 
 // Ejemplo de interceptor para agregar token automáticamente
