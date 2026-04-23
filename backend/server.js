@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import loginRouter from "./routes/login.js";
 import ventasRouter from "./routes/ventas.js";
 import reportesRouter from "./routes/reportes.js";
+import usuariosRouter from "./routes/usuarios.js";
 
 dotenv.config(); // lee las variables del archivo .env
 
@@ -153,10 +154,11 @@ app.put("/api/productos/:id", async (req, res) => {
 
 // Rutas de login
 app.use("/api", loginRouter);
+app.use("/api/usuarios", usuariosRouter);
 
 // Iniciamos el servidor
 
-const PORT = process.env.PORT || 4000; // Railway pasará el puerto aquí
+const PORT = process.env.PORT || 3000; // Railway pasará el puerto aquí
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor activo en puerto ${PORT}`);

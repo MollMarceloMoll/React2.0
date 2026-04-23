@@ -1,19 +1,19 @@
-import express, { Router, Request, Response } from 'express';
+import express from 'express';
 import bcrypt from 'bcrypt';
 import Joi from 'joi';
-import { pool } from '../config/database';
+import pool from '../db.js';
 
-const router = Router();
+const router = express.Router();
 
-// Middleware para validar token (implementa según tu sistema de autenticación)
-const authenticateToken = (req: Request, res: Response, next: Function) => {
+// Middleware para validar token
+const authenticateToken = (req, res, next) => {
   const userId = req.headers['x-user-id'];
   
   if (!userId) {
     return res.status(401).json({ error: 'No autorizado' });
   }
   
-  req.userId = parseInt(userId as string);
+  req.userId = parseInt(userId);
   next();
 };
 
@@ -33,7 +33,7 @@ const passwordChangeSchema = Joi.object({
 });
 
 // Cambiar correo electrónico
-router.post('/change-email', authenticateToken, async (req: Request, res: Response) => {
+router.post('/change-email', authenticateToken, async (req, res) => {
   try {
     const { error, value } = emailChangeSchema.validate(req.body);
     
@@ -48,7 +48,7 @@ router.post('/change-email', authenticateToken, async (req: Request, res: Respon
     const [users] = await pool.query(
       'SELECT id, email, passwordHash FROM usuarios WHERE id = ?',
       [userId]
-    ) as any[];
+    );
 
     if (users.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -67,7 +67,7 @@ router.post('/change-email', authenticateToken, async (req: Request, res: Respon
     const [existingEmail] = await pool.query(
       'SELECT id FROM usuarios WHERE email = ? AND id != ?',
       [newEmail, userId]
-    ) as any[];
+    );
 
     if (existingEmail.length > 0) {
       return res.status(409).json({ error: 'El correo electrónico ya está en uso' });
@@ -91,7 +91,7 @@ router.post('/change-email', authenticateToken, async (req: Request, res: Respon
 });
 
 // Cambiar contraseña
-router.post('/change-password', authenticateToken, async (req: Request, res: Response) => {
+router.post('/change-password', authenticateToken, async (req, res) => {
   try {
     const { error, value } = passwordChangeSchema.validate(req.body);
     
@@ -106,7 +106,7 @@ router.post('/change-password', authenticateToken, async (req: Request, res: Res
     const [users] = await pool.query(
       'SELECT id, passwordHash FROM usuarios WHERE id = ?',
       [userId]
-    ) as any[];
+    );
 
     if (users.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' });

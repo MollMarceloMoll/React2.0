@@ -123,61 +123,92 @@ const Usuarios = () => {
     }
   };
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateEmailForm()) return;
+const handleEmailSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!validateEmailForm()) return;
 
-    setLoading(true);
-    try {
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setSuccess({
-        type: 'email',
-        message: 'Correo electrónico actualizado exitosamente'
-      });
-      
-      setEmailForm({ newEmail: '', currentPassword: '' });
-      
-      setTimeout(() => {
-        setSuccess({ type: null, message: '' });
-      }, 4000);
-    } catch (error) {
-      setErrors({ submit: 'Error al actualizar el correo. Intenta de nuevo.' });
-    } finally {
-      setLoading(false);
+  setLoading(true);
+  try {
+    const response = await fetch('http://localhost:4000/api/usuarios/change-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': localStorage.getItem('userId') || ''
+      },
+      body: JSON.stringify({
+        newEmail: emailForm.newEmail,
+        currentPassword: emailForm.currentPassword
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      setErrors({ submit: errorData.error });
+      return;
     }
-  };
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validatePasswordForm()) return;
+    setSuccess({
+      type: 'email',
+      message: 'Correo electrónico actualizado exitosamente'
+    });
+    
+    setEmailForm({ newEmail: '', currentPassword: '' });
+    
+    setTimeout(() => {
+      setSuccess({ type: null, message: '' });
+    }, 4000);
+  } catch (error) {
+    setErrors({ submit: 'Error al actualizar el correo. Intenta de nuevo.' });
+  } finally {
+    setLoading(false);
+  }
+};
 
-    setLoading(true);
-    try {
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setSuccess({
-        type: 'password',
-        message: 'Contraseña actualizada exitosamente'
-      });
-      
-      setPasswordForm({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-      
-      setTimeout(() => {
-        setSuccess({ type: null, message: '' });
-      }, 4000);
-    } catch (error) {
-      setErrors({ submit: 'Error al actualizar la contraseña. Intenta de nuevo.' });
-    } finally {
-      setLoading(false);
+const handlePasswordSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!validatePasswordForm()) return;
+
+  setLoading(true);
+  try {
+    const response = await fetch('http://localhost:4000/api/usuarios/change-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': localStorage.getItem('userId') || ''
+      },
+      body: JSON.stringify({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+        confirmPassword: passwordForm.confirmPassword
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      setErrors({ submit: errorData.error });
+      return;
     }
-  };
+
+    setSuccess({
+      type: 'password',
+      message: 'Contraseña actualizada exitosamente'
+    });
+    
+    setPasswordForm({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+    
+    setTimeout(() => {
+      setSuccess({ type: null, message: '' });
+    }, 4000);
+  } catch (error) {
+    setErrors({ submit: 'Error al actualizar la contraseña. Intenta de nuevo.' });
+  } finally {
+    setLoading(false);
+  }
+};
 
   const resetEmailForm = () => {
     setEmailForm({ newEmail: '', currentPassword: '' });
