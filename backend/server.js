@@ -108,14 +108,17 @@ import usuariosRouter from "./routes/usuarios.js";
 import pool from './db.js'; 
 
 dotenv.config();
-
 const app = express();
 
-// --- CONFIGURACIÓN DE CORS ---
+// 1. CORS Dinámico para Vercel
 const corsOptions = {
-    origin: ["https://react2-0-mu.vercel.app", "http://localhost:5173"],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-user-id", "x-requested-with"],
+    origin: function (origin, callback) {
+        if (!origin || origin.includes(".vercel.app") || origin.includes("localhost")) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true,
     optionsSuccessStatus: 200
 };
@@ -123,47 +126,36 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// --- ORGANIZACIÓN DE RUTAS ---
-// Creamos un router para que todo lo que empiece con /api funcione
-const apiRouter = express.Router();
-
-// Rutas de productos (Ahora dentro de /api)
-apiRouter.get("/productos", async (req, res) => {
+// 2. RUTAS DE PRODUCTOS (Directas en /api)
+// Ponemos esto ANTES de los routers para asegurar que se registren
+app.get("/api/productos", async (req, res) => {
     try {
-        const [rows] = await pool.query("SELECT * FROM productos"); 
+        const [rows] = await pool.query("SELECT * FROM productos");
         res.json(rows);
     } catch (error) {
+        console.error("Error en DB:", error);
         res.status(500).json({ error: "Error al obtener productos" });
     }
 });
 
-apiRouter.get("/mascotas", async (req, res) => {
-    try {
-        const [rows] = await pool.query("SELECT * FROM productos WHERE categoria = 'mascota'");
-        res.json(rows);
-    } catch (error) {
-        res.status(500).json({ error: "Error al obtener mascotas" });
-    }
-});
+// 3. REGISTRO DE ROUTERS EXTERNOS
+app.use("/api/ventas", ventasRouter);
+app.use("/api/reportes", reportesRouter);
+app.use("/api/usuarios", usuariosRouter);
+app.use("/api", loginRouter); // Esto cubre /api/login
 
-// Conectamos tus otros archivos de rutas al prefijo /api
-apiRouter.use("/ventas", ventasRouter);
-apiRouter.use("/reportes", reportesRouter);
-apiRouter.use("/usuarios", usuariosRouter);
-apiRouter.use("/", loginRouter); // Esto manejará /api/login
-
-// IMPORTANTE: Registrar el router principal
-app.use("/api", apiRouter);
-
-// Ruta raíz para verificar que el server vive
+// 4. RUTA RAÍZ (Para que Railway no de error al entrar al link directo)
 app.get("/", (req, res) => {
     res.send("Servidor de Programa Ventas (Railway) activo 🚀");
 });
 
-// --- PUERTO Y ARRANQUE (CORREGIDO) ---
-// Railway siempre inyecta el número del puerto en process.env.PORT
-const PORT = process.env.PORT || 4000; 
+// 5. MANEJO DE RUTAS NO ENCONTRADAS (Para debuggear el 404)
+app.use((req, res) => {
+    console.log(`Ruta no encontrada: ${req.method} ${req.url}`);
+    res.status(404).json({ message: `La ruta ${req.url} no existe en este servidor.` });
+});
 
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor activo en puerto ${PORT}`);
+    console.log(`Servidor activo en puerto ${PORT}`);
 });
