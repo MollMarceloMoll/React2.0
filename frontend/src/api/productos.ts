@@ -5,6 +5,7 @@ export async function getProductos() {
     return res.data;
 }
 
+
 export async function crearProducto(producto: any) {
     const res = await api.post("/productos", producto);
     return res.data;

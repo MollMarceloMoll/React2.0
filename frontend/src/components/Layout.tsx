@@ -34,7 +34,7 @@ export default function Layout() {
     setCargando(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:4000/api/productos");
+      const response = await fetch("https://react20-production.up.railway.app/api");
       if (!response.ok) throw new Error("Error al cargar");
       const datos = await response.json();
       setProductos(datos);
@@ -64,8 +64,8 @@ export default function Layout() {
     try {
       const esEdicion = !!data.id;
       const url = esEdicion
-        ? `http://localhost:4000/api/productos/${data.id}`
-        : "http://localhost:4000/api/productos";
+        ? `https://react20-production.up.railway.app/api/${data.id}`
+        : "https://react20-production.up.railway.app/api";
       const method = esEdicion ? "PUT" : "POST";
 
       const response = await fetch(url, {

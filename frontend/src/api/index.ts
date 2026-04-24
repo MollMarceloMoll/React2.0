@@ -2,7 +2,6 @@ import axios from "axios";
 
 // 1. Creamos una instacia a Axios con la URL base del backend
 const api = axios.create({
-    //baseURL: "http://localhost:3000/api",
     baseURL: "https://react20-production.up.railway.app/api",
 });
 

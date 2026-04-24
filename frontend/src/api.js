@@ -1,7 +1,6 @@
 import axios from "axios";
 
 const api = axios.create({
-  //baseURL: "http://localhost:4000/api", // tu backend Express
   baseURL: "https://react20-production.up.railway.app/api",
 });
 

@@ -193,7 +193,7 @@ app.get("/", (req, res) => {
     res.send("Servidor de Programa Ventas (Railway) activo 🚀");
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || "https://react20-production.up.railway.app/api";
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor activo en puerto ${PORT}`);
