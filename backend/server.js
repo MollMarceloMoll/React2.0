@@ -111,89 +111,58 @@ dotenv.config();
 
 const app = express();
 
-// --- CONFIGURACIÓN DE CORS REFORZADA ---
+// --- CONFIGURACIÓN DE CORS ---
 const corsOptions = {
     origin: ["https://react2-0-mu.vercel.app", "http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-        "Content-Type", 
-        "Authorization", 
-        "x-user-id",
-        "x-requested-with"
-    ],
+    allowedHeaders: ["Content-Type", "Authorization", "x-user-id", "x-requested-with"],
     credentials: true,
     optionsSuccessStatus: 200
 };
 
-// 1. Aplicamos CORS globalmente a todas las rutas antes que a nada
 app.use(cors(corsOptions));
-
-// 2. Quitamos la línea de app.options("/*") que causaba el crash
-// Express manejará los preflights automáticamente con el middleware global de arriba
-
 app.use(express.json());
 
-// --- RUTAS ---
-app.use("/api/ventas", ventasRouter);
-app.use("/api/reportes", reportesRouter);
-app.use("/api", loginRouter);
-app.use("/api/usuarios", usuariosRouter);
+// --- ORGANIZACIÓN DE RUTAS ---
+// Creamos un router para que todo lo que empiece con /api funcione
+const apiRouter = express.Router();
 
-// --- RUTAS DE PRODUCTOS ---
-app.get("/api/productos", async(req, res) => {
+// Rutas de productos (Ahora dentro de /api)
+apiRouter.get("/productos", async (req, res) => {
     try {
         const [rows] = await pool.query("SELECT * FROM productos"); 
         res.json(rows);
     } catch (error) {
-        res.status(500).json({error : "Error al obtener productos"});
+        res.status(500).json({ error: "Error al obtener productos" });
     }
 });
 
-app.get("/api/mascotas", async(req, res) => {
+apiRouter.get("/mascotas", async (req, res) => {
     try {
         const [rows] = await pool.query("SELECT * FROM productos WHERE categoria = 'mascota'");
         res.json(rows);
     } catch (error) {
-        res.status(500).json({error : "Error al obtener mascotas"});
+        res.status(500).json({ error: "Error al obtener mascotas" });
     }
 });
 
-app.get("/api/granja", async(req, res) => {
-    try {
-        const [rows] = await pool.query("SELECT * FROM productos WHERE categoria = 'granja'");
-        res.json(rows);
-    } catch (error) {
-        res.status(500).json({error: "Error al obtener granja"})
-    }
-});
+// Conectamos tus otros archivos de rutas al prefijo /api
+apiRouter.use("/ventas", ventasRouter);
+apiRouter.use("/reportes", reportesRouter);
+apiRouter.use("/usuarios", usuariosRouter);
+apiRouter.use("/", loginRouter); // Esto manejará /api/login
 
-app.post("/api/productos", async (req, res) => {
-    try {
-        const {
-            nombre, precio_compra, precio_venta, precio_venta_kg, peso_bolsa_kg,
-            stock_unidades, categoria, animal, etapa, proteinas, sabor, calidad, color, talle
-        } = req.body;
+// IMPORTANTE: Registrar el router principal
+app.use("/api", apiRouter);
 
-        const [result] = await pool.query(
-            `INSERT INTO productos 
-                (nombre, precio_compra, precio_venta, precio_venta_kg, peso_bolsa_kg, 
-                 stock_unidades, categoria, animal, etapa, proteinas, sabor, calidad, color, talle) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [nombre, precio_compra, precio_venta, precio_venta_kg, peso_bolsa_kg,
-             stock_unidades, categoria, animal, etapa, proteinas, sabor, calidad, color, talle]
-        );
-        res.status(201).json({ message: "Producto guardado", id: result.insertId });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Error al guardar producto" });
-    }
-});
-
+// Ruta raíz para verificar que el server vive
 app.get("/", (req, res) => {
     res.send("Servidor de Programa Ventas (Railway) activo 🚀");
 });
 
-const PORT = process.env.PORT || "https://react20-production.up.railway.app/api";
+// --- PUERTO Y ARRANQUE (CORREGIDO) ---
+// Railway siempre inyecta el número del puerto en process.env.PORT
+const PORT = process.env.PORT || 4000; 
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor activo en puerto ${PORT}`);
