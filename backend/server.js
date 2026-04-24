@@ -157,6 +157,52 @@ apiRouter.get("/mascotas", async (req, res) => {
     }
 });
 
+apiRouter.post("/productos", async (req, res) => {
+    try {
+        const {
+            nombre, precio_compra, precio_venta, precio_venta_kg, peso_bolsa_kg,
+            stock_unidades, categoria, animal, etapa, proteinas, sabor, calidad, color, talle
+        } = req.body;
+
+        const [result] = await pool.query(
+            `INSERT INTO productos 
+                (nombre, precio_compra, precio_venta, precio_venta_kg, peso_bolsa_kg, 
+                 stock_unidades, categoria, animal, etapa, proteinas, sabor, calidad, color, talle) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [nombre, precio_compra, precio_venta, precio_venta_kg, peso_bolsa_kg,
+             stock_unidades, categoria, animal, etapa, proteinas, sabor, calidad, color, talle]
+        );
+        res.status(201).json({ message: "Producto guardado", id: result.insertId });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al guardar producto" });
+    }
+});
+
+apiRouter.put("/productos/:id", async (req, res) => {
+    try {
+        const {
+            nombre, precio_compra, precio_venta, precio_venta_kg, peso_bolsa_kg,
+            stock_unidades, categoria, animal, etapa, proteinas, sabor, calidad, color, talle
+        } = req.body;
+
+        await pool.query(
+            `UPDATE productos SET
+                nombre = ?, precio_compra = ?, precio_venta = ?, precio_venta_kg = ?, peso_bolsa_kg = ?,
+                stock_unidades = ?, categoria = ?, animal = ?, etapa = ?, proteinas = ?,
+                sabor = ?, calidad = ?, color = ?, talle = ?
+             WHERE id = ?`,
+            [nombre, precio_compra, precio_venta, precio_venta_kg, peso_bolsa_kg,
+             stock_unidades, categoria, animal, etapa, proteinas, sabor, calidad, color, talle,
+             req.params.id]
+        );
+        res.json({ message: "Producto actualizado", id: Number(req.params.id) });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Error al actualizar producto" });
+    }
+});
+
 // 3. INTEGRACIÓN DE ROUTERS EXTERNOS
 // Todos colgarán de /api/nombre_del_recurso
 apiRouter.use("/ventas", ventasRouter);

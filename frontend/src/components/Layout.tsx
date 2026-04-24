@@ -34,10 +34,13 @@ export default function Layout() {
     setCargando(true);
     setError(null);
     try {
-      const response = await fetch("https://react20-production.up.railway.app/api");
+      const response = await fetch(
+        "https://react20-production.up.railway.app/api/productos"
+      );
       if (!response.ok) throw new Error("Error al cargar");
       const datos = await response.json();
-      setProductos(datos);
+      // La ruta /api devuelve un objeto { message }; /api/productos devuelve el array.
+      setProductos(Array.isArray(datos) ? datos : []);
     } catch (err) {
       setError("Error al cargar productos");
       console.error(err);
@@ -64,8 +67,8 @@ export default function Layout() {
     try {
       const esEdicion = !!data.id;
       const url = esEdicion
-        ? `https://react20-production.up.railway.app/api/${data.id}`
-        : "https://react20-production.up.railway.app/api";
+        ? `https://react20-production.up.railway.app/api/productos/${data.id}`
+        : "https://react20-production.up.railway.app/api/productos";
       const method = esEdicion ? "PUT" : "POST";
 
       const response = await fetch(url, {
