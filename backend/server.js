@@ -12,10 +12,16 @@ dotenv.config();
 const app = express();
 
 // --- CONFIGURACIÓN DE CORS MEJORADA ---
+// En backend/server.js
 app.use(cors({
-    origin: "https://react2-0-mu.vercel.app", // En producción puedes cambiar "*" por tu URL de Vercel para más seguridad
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+    // ELIMINA el "/login" de la URL. Debe ser solo el dominio.
+    origin: [
+        "https://react2-0-mu.vercel.app", 
+        "http://localhost:5173"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
 }));
 
 app.use(express.json());
