@@ -8,11 +8,11 @@ const api = axios.create({
 
 // 2. Interceptor: antes de cada request, agrega el token si existe
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("token");
-    if(token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 // 3. Exportamos la instacia para usarla en los componentes
