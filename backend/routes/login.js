@@ -93,6 +93,9 @@ router.post("/login", async (req, res) => {
     console.error("Error detallado:", error);
     res.status(500).json({ message: "Error interno del servidor" });
   }
+  // AGREGA ESTA LÍNEA PARA DEBUGEAR:
+console.log("Hash en DB:", user.passwordHash);
+console.log("Contraseña recibida:", contraseña);
 });
 
 export default router;
