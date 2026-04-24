@@ -72,7 +72,8 @@ router.post("/login", async (req, res) => {
     }
 
     // Usamos 'contraseña' que es lo que recibimos
-    const isMatch = await bcrypt.compare(contraseña, user.passwordHash);
+    //const isMatch = await bcrypt.compare(contraseña, user.passwordHash);
+    const isMatch = (contraseña === user.passwordHash);// sin encriptar para pruebas
 
     if (!isMatch) {
       return res.status(401).json({ message: "Contraseña incorrecta" });
