@@ -13,7 +13,7 @@ const app = express();
 
 // --- CONFIGURACIÓN DE CORS MEJORADA ---
 app.use(cors({
-    origin: "https://react2-0-mu.vercel.app/login", // En producción puedes cambiar "*" por tu URL de Vercel para más seguridad
+    origin: "https://react2-0-mu.vercel.app", // En producción puedes cambiar "*" por tu URL de Vercel para más seguridad
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
