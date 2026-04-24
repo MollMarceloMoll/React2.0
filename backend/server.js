@@ -14,11 +14,14 @@ const app = express();
 // --- CONFIGURACIÓN DE CORS MEJORADA ---
 // En backend/server.js
 app.use(cors({
-    // ELIMINA el "/login" de la URL. Debe ser solo el dominio.
-    origin: [
-        "https://react2-0-mu.vercel.app", 
-        "http://localhost:5173"
-    ],
+    origin: function (origin, callback) {
+        // Esto permite cualquier subdominio de vercel.app o localhost
+        if (!origin || origin.includes("vercel.app") || origin.includes("localhost")) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
