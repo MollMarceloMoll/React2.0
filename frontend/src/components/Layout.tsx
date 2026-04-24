@@ -64,7 +64,7 @@ export default function Layout() {
     try {
       const esEdicion = !!data.id;
       const url = esEdicion
-        ? `https://react20-production.up.railway.app/api${data.id}`
+        ? `https://react20-production.up.railway.app/api/${data.id}`
         : "https://react20-production.up.railway.app/api";
       const method = esEdicion ? "PUT" : "POST";
 
