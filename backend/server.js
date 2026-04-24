@@ -110,15 +110,18 @@ import pool from './db.js';
 dotenv.config();
 const app = express();
 
-// 1. CORS Dinámico para Vercel
+// 1. CONFIGURACIÓN DE CORS PROFESIONAL
 const corsOptions = {
     origin: function (origin, callback) {
+        // Permitimos localhost y cualquier subdominio de Vercel
         if (!origin || origin.includes(".vercel.app") || origin.includes("localhost")) {
             callback(null, true);
         } else {
             callback(new Error("Not allowed by CORS"));
         }
     },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-user-id", "x-requested-with"],
     credentials: true,
     optionsSuccessStatus: 200
 };
@@ -126,9 +129,16 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// 2. RUTAS DE PRODUCTOS (Directas en /api)
-// Ponemos esto ANTES de los routers para asegurar que se registren
-app.get("/api/productos", async (req, res) => {
+// 2. DEFINICIÓN DEL ROUTER PRINCIPAL (/api)
+const apiRouter = express.Router();
+
+// Ruta de "Salud" para evitar el 404 cuando el front llama a la base de la API
+apiRouter.get("/", (req, res) => {
+    res.json({ message: "API de Programa Ventas operativa 🚀" });
+});
+
+// Rutas de Productos
+apiRouter.get("/productos", async (req, res) => {
     try {
         const [rows] = await pool.query("SELECT * FROM productos");
         res.json(rows);
@@ -138,24 +148,41 @@ app.get("/api/productos", async (req, res) => {
     }
 });
 
-// 3. REGISTRO DE ROUTERS EXTERNOS
-app.use("/api/ventas", ventasRouter);
-app.use("/api/reportes", reportesRouter);
-app.use("/api/usuarios", usuariosRouter);
-app.use("/api", loginRouter); // Esto cubre /api/login
+apiRouter.get("/mascotas", async (req, res) => {
+    try {
+        const [rows] = await pool.query("SELECT * FROM productos WHERE categoria = 'mascota'");
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({ error: "Error al obtener mascotas" });
+    }
+});
 
-// 4. RUTA RAÍZ (Para que Railway no de error al entrar al link directo)
+// 3. INTEGRACIÓN DE ROUTERS EXTERNOS
+// Todos colgarán de /api/nombre_del_recurso
+apiRouter.use("/ventas", ventasRouter);
+apiRouter.use("/reportes", reportesRouter);
+apiRouter.use("/usuarios", usuariosRouter);
+apiRouter.use("/", loginRouter); // Maneja /api/login y /api/registro si existen
+
+// Montamos el router en la aplicación
+app.use("/api", apiRouter);
+
+// 4. RUTA INFORMATIVA (Raíz del dominio)
 app.get("/", (req, res) => {
-    res.send("Servidor de Programa Ventas (Railway) activo 🚀");
+    res.send("Servidor Backend de Railway funcionando correctamente.");
 });
 
-// 5. MANEJO DE RUTAS NO ENCONTRADAS (Para debuggear el 404)
+// 5. MIDDLEWARE DE DEPURACIÓN (Manejo de 404 real)
 app.use((req, res) => {
-    console.log(`Ruta no encontrada: ${req.method} ${req.url}`);
-    res.status(404).json({ message: `La ruta ${req.url} no existe en este servidor.` });
+    console.log(`[404] Intento de acceso a ruta inexistente: ${req.method} ${req.url}`);
+    res.status(404).json({ 
+        error: "Ruta no encontrada", 
+        path: req.url 
+    });
 });
 
+// 6. ARRANQUE DEL SERVIDOR
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Servidor activo en puerto ${PORT}`);
+    console.log(`✅ Servidor Senior activo en puerto ${PORT}`);
 });
