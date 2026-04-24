@@ -111,9 +111,8 @@ dotenv.config();
 
 const app = express();
 
-// --- CONFIGURACIÓN DE CORS REPARADA ---
+// --- CONFIGURACIÓN DE CORS REFORZADA ---
 const corsOptions = {
-    // Permitimos explícitamente tus dominios para evitar problemas de preflight
     origin: ["https://react2-0-mu.vercel.app", "http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: [
@@ -123,14 +122,14 @@ const corsOptions = {
         "x-requested-with"
     ],
     credentials: true,
-    optionsSuccessStatus: 200 // Algunos navegadores antiguos fallan con 204
+    optionsSuccessStatus: 200
 };
 
-// Aplicamos CORS a todas las rutas
+// 1. Aplicamos CORS globalmente a todas las rutas antes que a nada
 app.use(cors(corsOptions));
 
-// Corregimos el error del asterisco para las peticiones OPTIONS
-app.options("/*", cors(corsOptions)); 
+// 2. Quitamos la línea de app.options("/*") que causaba el crash
+// Express manejará los preflights automáticamente con el middleware global de arriba
 
 app.use(express.json());
 
