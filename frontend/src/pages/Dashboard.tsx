@@ -200,7 +200,7 @@ const Home = () => {
             Bienvenido a Forrajería
           </h1>
           <p className="text-blue-100 text-lg">
-            Tu sistema integral de gestión de ventas y inventario
+            Tu sistema integral de gestión de ventas e inventario
           </p>
         </div>
       </div>
