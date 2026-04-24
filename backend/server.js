@@ -111,28 +111,26 @@ dotenv.config();
 
 const app = express();
 
-// --- CONFIGURACIÓN DE CORS PROFESIONAL ---
-app.use(cors({
-    origin: function (origin, callback) {
-        // Permitimos localhost, dominios de vercel y también peticiones sin origin (como Postman)
-        if (!origin || origin.includes("vercel.app") || origin.includes("localhost")) {
-            callback(null, true);
-        } else {
-            callback(new Error("Not allowed by CORS"));
-        }
-    },
+// --- CONFIGURACIÓN DE CORS REPARADA ---
+const corsOptions = {
+    // Permitimos explícitamente tus dominios para evitar problemas de preflight
+    origin: ["https://react2-0-mu.vercel.app", "http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: [
         "Content-Type", 
         "Authorization", 
-        "x-user-id",    // ✅ AÑADIDA: Esta es la que bloqueaba tu login
+        "x-user-id",
         "x-requested-with"
     ],
-    credentials: true
-}));
+    credentials: true,
+    optionsSuccessStatus: 200 // Algunos navegadores antiguos fallan con 204
+};
 
-// Importante: Responder a las peticiones preflight (OPTIONS)
-app.options('*', cors());
+// Aplicamos CORS a todas las rutas
+app.use(cors(corsOptions));
+
+// Corregimos el error del asterisco para las peticiones OPTIONS
+app.options("/*", cors(corsOptions)); 
 
 app.use(express.json());
 
@@ -143,7 +141,6 @@ app.use("/api", loginRouter);
 app.use("/api/usuarios", usuariosRouter);
 
 // --- RUTAS DE PRODUCTOS ---
-
 app.get("/api/productos", async(req, res) => {
     try {
         const [rows] = await pool.query("SELECT * FROM productos"); 
@@ -193,12 +190,10 @@ app.post("/api/productos", async (req, res) => {
     }
 });
 
-// Ruta raíz para evitar el "Cannot GET /"
 app.get("/", (req, res) => {
     res.send("Servidor de Programa Ventas (Railway) activo 🚀");
 });
 
-// --- PUERTO Y ARRANQUE ---
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, '0.0.0.0', () => {
