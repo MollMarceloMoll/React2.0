@@ -50,6 +50,22 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
+const normalizeBcryptHash = (storedHash) => {
+    if (!storedHash || typeof storedHash !== "string") return null;
+    if (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$") || storedHash.startsWith("$2y$")) {
+        return storedHash;
+    }
+
+    // Formato legacy detectado: b10 + 53 chars (sin "$2b$" ni separadores).
+    const legacyMatch = storedHash.match(/^b(\d{2})([./A-Za-z0-9]{53})$/);
+    if (legacyMatch) {
+        const [, cost, body] = legacyMatch;
+        return `$2b$${cost}$${body}`;
+    }
+
+    return null;
+};
+
 router.post("/login", async (req, res) => {
     const { usuario, contraseña } = req.body;
     console.log("Datos recibidos en login:", { usuario, contraseña });
@@ -65,31 +81,28 @@ router.post("/login", async (req, res) => {
         const user = rows[0];
         console.log("Hash detectado en DB:", user.passwordHash);
 
-        let isMatch = false;
-
-        // 1. Intento profesional con Bcrypt
-        try {
-            if (user.passwordHash.startsWith('$2')) {
-                isMatch = await bcrypt.compare(contraseña, user.passwordHash);
-            }
-        } catch (err) {
-            console.log("Bcrypt falló, intentando comparación simple...");
+        const normalizedHash = normalizeBcryptHash(user.passwordHash);
+        if (!normalizedHash) {
+            return res.status(401).json({ message: "Credenciales inválidas" });
         }
 
-        // 2. "Salto de emergencia": Si la DB transformó el hash o es texto plano
-        // Esto permite que '1234' pase si el hash en DB empieza con 'b0' o es igual al texto
-        if (!isMatch) {
-            if (contraseña === user.passwordHash || (user.passwordHash.startsWith('b0') && contraseña === '1234')) {
-                console.log("Login aprobado por bypass de emergencia");
-                isMatch = true;
-            }
+        let isMatch = false;
+        try {
+            isMatch = await bcrypt.compare(contraseña, normalizedHash);
+        } catch (err) {
+            console.error("Error validando hash bcrypt:", err);
         }
 
         if (!isMatch) {
             return res.status(401).json({ message: "Contraseña incorrecta" });
         }
 
-        // 3. Generación de Token
+        // Si el hash estaba en formato legacy, lo normalizamos en DB al iniciar sesion.
+        if (normalizedHash !== user.passwordHash) {
+            await pool.query("UPDATE usuarios SET passwordHash = ? WHERE id = ?", [normalizedHash, user.id]);
+        }
+
+        // Generación de Token
         const token = jwt.sign(
             { id: user.id, role: user.role },
             process.env.JWT_SECRET || "secreto_temporal",

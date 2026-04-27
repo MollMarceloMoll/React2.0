@@ -5,6 +5,34 @@ import pool from '../db.js';
 
 const router = express.Router();
 
+const normalizeBcryptHash = (storedHash) => {
+  if (!storedHash || typeof storedHash !== 'string') return null;
+  if (storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$') || storedHash.startsWith('$2y$')) {
+    return storedHash;
+  }
+
+  const legacyMatch = storedHash.match(/^b(\d{2})([./A-Za-z0-9]{53})$/);
+  if (legacyMatch) {
+    const [, cost, body] = legacyMatch;
+    return `$2b$${cost}$${body}`;
+  }
+
+  return null;
+};
+
+const verifyPassword = async (plainPassword, storedHash) => {
+  const normalizedHash = normalizeBcryptHash(storedHash);
+  if (!normalizedHash) return { ok: false, normalizedHash: null };
+
+  try {
+    const ok = await bcrypt.compare(plainPassword, normalizedHash);
+    return { ok, normalizedHash };
+  } catch (error) {
+    console.error('Error validando bcrypt en usuarios.js:', error);
+    return { ok: false, normalizedHash };
+  }
+};
+
 // Middleware para validar token
 const authenticateToken = (req, res, next) => {
   const userId = req.headers['x-user-id'];
@@ -78,10 +106,14 @@ router.post('/change-email', authenticateToken, async (req, res) => {
     const user = users[0];
 
     // Verificar contraseña actual
-    const passwordMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    const { ok: passwordMatch, normalizedHash } = await verifyPassword(currentPassword, user.passwordHash);
     
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Contraseña actual incorrecta' });
+    }
+
+    if (normalizedHash && normalizedHash !== user.passwordHash) {
+      await pool.query('UPDATE usuarios SET passwordHash = ? WHERE id = ?', [normalizedHash, userId]);
     }
 
     // Verificar que el nuevo email no esté en uso
@@ -136,14 +168,16 @@ router.post('/change-password', authenticateToken, async (req, res) => {
     const user = users[0];
 
     // Verificar contraseña actual
-    const passwordMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    const { ok: passwordMatch, normalizedHash } = await verifyPassword(currentPassword, user.passwordHash);
     
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Contraseña actual incorrecta' });
     }
 
+    const hashForComparison = normalizedHash || user.passwordHash;
+
     // Verificar que la nueva contraseña sea diferente
-    const isSamePassword = await bcrypt.compare(newPassword, user.passwordHash);
+    const isSamePassword = await bcrypt.compare(newPassword, hashForComparison);
     
     if (isSamePassword) {
       return res.status(400).json({ error: 'La nueva contraseña debe ser diferente a la actual' });
