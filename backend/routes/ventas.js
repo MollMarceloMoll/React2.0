@@ -90,7 +90,7 @@ router.post("/", async (req, res) => {
     for (const item of items) {
       // Obtener stock ANTES de descontar
       const [productoAntes] = await connection.query(
-        "SELECT stock_kg, stock_unidades, categoria FROM productos WHERE id = ?",
+        "SELECT stock_kg, stock_unidades, categoria, precio_compra, peso_bolsa_kg FROM productos WHERE id = ?",
         [item.producto_id]
       );
 
@@ -99,21 +99,40 @@ router.post("/", async (req, res) => {
           ? productoAntes[0].stock_kg
           : productoAntes[0].stock_unidades;
 
-      // Insertar línea de venta
-    await connection.query(
+      const cantidad = Number(item.cantidad) || 0;
+      const precioUnitario = Number(item.precio_unitario) || 0;
+      const descuento = Number(item.descuento) || 0;
+      const subtotal = Number(item.subtotal) || precioUnitario * cantidad;
+      const precioCompra = Number(productoAntes[0].precio_compra) || 0;
+      const pesoBolsaKg = Number(productoAntes[0].peso_bolsa_kg) || 0;
+
+      let costoUnitario = precioCompra;
+      if (item.tipo_venta === "kg") {
+        costoUnitario = pesoBolsaKg > 0 ? precioCompra / pesoBolsaKg : 0;
+      }
+
+      const costoTotal = costoUnitario * cantidad;
+      const ingresoNeto = subtotal - descuento;
+      const gananciaTotal = ingresoNeto - costoTotal;
+
+      // Insertar línea de venta con snapshot de costos/ganancia
+      await connection.query(
         `INSERT INTO ventas_detalle 
-            (venta_id, producto_id, tipo_venta, cantidad, precio_unitario, subtotal, descuento) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            (venta_id, producto_id, tipo_venta, cantidad, precio_unitario, subtotal, descuento, costo_unitario, costo_total, ganancia_total) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
             venta_id,
             item.producto_id,
             item.tipo_venta,
-            item.cantidad,
-            item.precio_unitario,
-            item.subtotal,
-            item.descuento || 0,
+            cantidad,
+            precioUnitario,
+            subtotal,
+            descuento,
+            costoUnitario,
+            costoTotal,
+            gananciaTotal,
         ]
-    );
+      );
 
       // Descontar del stock
       if (productoAntes[0].categoria === "alimento") {
@@ -174,7 +193,7 @@ router.post("/", async (req, res) => {
       movimientos.push({
         producto_id: item.producto_id,
         tipo_movimiento: "venta",
-        cantidad: item.cantidad,
+        cantidad: cantidad,
         stock_anterior: stockAnterior,
         stock_nuevo: stockNuevo,
         venta_id: venta_id,

@@ -36,19 +36,15 @@ router.get("/resumen", async (req, res) => {
 
     const [rows] = await db.query(
       `SELECT 
-        COUNT(*) as total_ventas,
-        COALESCE(SUM(v.total), 0) as ganancia_total,
+        COUNT(DISTINCT v.id) as total_ventas,
+        COALESCE(SUM(v.total), 0) as ingresos_totales,
+        COALESCE(SUM(vd.ganancia_total), 0) as ganancia_total,
         COALESCE(AVG(v.total), 0) as ticket_promedio,
         COALESCE(SUM(v.descuento_total), 0) as descuentos_total,
-        COALESCE(SUM(
-          vd.cantidad * (p.precio_venta - p.precio_compra)
-        ), 0) as ganancia_real_unitaria,
-        COALESCE(SUM(
-          (vd.cantidad / NULLIF(p.peso_bolsa_kg, 0)) * (p.precio_venta_kg - (p.precio_compra / NULLIF(p.peso_bolsa_kg, 0)))
-        ), 0) as ganancia_real_por_kilo
+        COALESCE(SUM(CASE WHEN vd.tipo_venta = 'kg' THEN vd.ganancia_total ELSE 0 END), 0) as ganancia_real_por_kilo,
+        COALESCE(SUM(CASE WHEN vd.tipo_venta <> 'kg' OR vd.tipo_venta IS NULL THEN vd.ganancia_total ELSE 0 END), 0) as ganancia_real_unitaria
        FROM ventas v
        LEFT JOIN ventas_detalle vd ON v.id = vd.venta_id
-       LEFT JOIN productos p ON vd.producto_id = p.id
        WHERE v.estado = 'completada' AND v.fecha >= ? AND v.fecha <= ?`,
       [fechaDesde, fechaHasta]
     );
@@ -56,6 +52,7 @@ router.get("/resumen", async (req, res) => {
     if (rows.length > 0) {
       const resumen = {
         total_ventas: rows.reduce((acc, r) => acc + r.total_ventas, 0),
+        ingresos_totales: rows.reduce((acc, r) => acc + parseFloat(r.ingresos_totales), 0),
         ganancia_total: rows.reduce((acc, r) => acc + parseFloat(r.ganancia_total), 0),
         ticket_promedio: rows.reduce((acc, r) => acc + parseFloat(r.ticket_promedio), 0) / rows.length,
         descuentos_total: rows.reduce((acc, r) => acc + parseFloat(r.descuentos_total), 0),
@@ -66,6 +63,7 @@ router.get("/resumen", async (req, res) => {
     } else {
       res.json({
         total_ventas: 0,
+        ingresos_totales: 0,
         ganancia_total: 0,
         ticket_promedio: 0,
         descuentos_total: 0,
@@ -89,16 +87,11 @@ router.get("/grafico", async (req, res) => {
       `SELECT 
         DATE(v.fecha) as fecha,
         COALESCE(SUM(v.total), 0) as ingresos,
-        COUNT(*) as ventas,
-        COALESCE(SUM(
-          vd.cantidad * (p.precio_venta - p.precio_compra)
-        ), 0) as ganancia_real_unitaria,
-        COALESCE(SUM(
-          (vd.cantidad / NULLIF(p.peso_bolsa_kg, 0)) * (p.precio_venta_kg - (p.precio_compra / NULLIF(p.peso_bolsa_kg, 0)))
-        ), 0) as ganancia_real_por_kilo
+        COUNT(DISTINCT v.id) as ventas,
+        COALESCE(SUM(CASE WHEN vd.tipo_venta = 'kg' THEN vd.ganancia_total ELSE 0 END), 0) as ganancia_real_por_kilo,
+        COALESCE(SUM(CASE WHEN vd.tipo_venta <> 'kg' OR vd.tipo_venta IS NULL THEN vd.ganancia_total ELSE 0 END), 0) as ganancia_real_unitaria
        FROM ventas v
        LEFT JOIN ventas_detalle vd ON v.id = vd.venta_id
-       LEFT JOIN productos p ON vd.producto_id = p.id
        WHERE v.estado = 'completada' AND v.fecha >= ? AND v.fecha <= ?
        GROUP BY DATE(v.fecha)
        ORDER BY fecha ASC`,
@@ -130,12 +123,8 @@ router.get("/top-productos", async (req, res) => {
         SUM(vd.cantidad) as total_cantidad,
         SUM(vd.subtotal) as total_ingresos,
         COUNT(DISTINCT vd.venta_id) as num_ventas,
-        COALESCE(SUM(
-          vd.cantidad * (p.precio_venta - p.precio_compra)
-        ), 0) as ganancia_real_unitaria,
-        COALESCE(SUM(
-          (vd.cantidad / NULLIF(p.peso_bolsa_kg, 0)) * (p.precio_venta_kg - (p.precio_compra / NULLIF(p.peso_bolsa_kg, 0)))
-        ), 0) as ganancia_real_por_kilo
+        COALESCE(SUM(CASE WHEN vd.tipo_venta = 'kg' THEN vd.ganancia_total ELSE 0 END), 0) as ganancia_real_por_kilo,
+        COALESCE(SUM(CASE WHEN vd.tipo_venta <> 'kg' OR vd.tipo_venta IS NULL THEN vd.ganancia_total ELSE 0 END), 0) as ganancia_real_unitaria
        FROM ventas_detalle vd
        JOIN productos p ON vd.producto_id = p.id
        JOIN ventas v ON vd.venta_id = v.id
@@ -190,14 +179,11 @@ router.get("/ventas-por-metodo", async (req, res) => {
     const [rows] = await db.query(
       `SELECT 
         metodo_pago,
-        COUNT(*) as cantidad,
+        COUNT(DISTINCT v.id) as cantidad,
         SUM(total) as total,
-        COALESCE(SUM(
-          vd.cantidad * (p.precio_venta - p.precio_compra)
-        ), 0) as ganancia_real_unitaria
+        COALESCE(SUM(vd.ganancia_total), 0) as ganancia_real_unitaria
        FROM ventas v
        LEFT JOIN ventas_detalle vd ON v.id = vd.venta_id
-       LEFT JOIN productos p ON vd.producto_id = p.id
        WHERE v.estado = 'completada' AND v.fecha >= ? AND v.fecha <= ?
        GROUP BY metodo_pago`,
       [fechaDesde, fechaHasta]
