@@ -266,54 +266,6 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Sección de guías de uso */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <AlertCircle className="w-6 h-6 text-green-500" />
-            Cómo Usar el Programa
-          </h2>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {guides.map((guide) => (
-              <div
-                key={guide.id}
-                className="bg-white dark:bg-slate-800 rounded-lg shadow border border-gray-200 dark:border-slate-700 overflow-hidden"
-              >
-                <button
-                  onClick={() => setSelectedGuide(selectedGuide === guide.id ? null : guide.id)}
-                  className="w-full p-6 text-left hover:bg-gray-50 dark:hover:bg-slate-700 transition flex items-center justify-between"
-                >
-                  <h3 className="font-semibold text-gray-900 dark:text-white text-lg">
-                    {guide.title}
-                  </h3>
-                  <ArrowRight
-                    className={`w-5 h-5 text-gray-600 dark:text-gray-400 transition-transform ${
-                      selectedGuide === guide.id ? 'rotate-90' : ''
-                    }`}
-                  />
-                </button>
-
-                {selectedGuide === guide.id && (
-                  <div className="border-t border-gray-200 dark:border-slate-700 p-6 bg-gray-50 dark:bg-slate-700/50">
-                    <ol className="space-y-3">
-                      {guide.steps.map((step, idx) => (
-                        <li key={idx} className="flex gap-4">
-                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
-                            {idx + 1}
-                          </span>
-                          <span className="text-gray-700 dark:text-gray-300 pt-0.5">
-                            {step}
-                          </span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Tarjeta de información adicional */}
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 sm:p-8">
           <div className="flex gap-4">
