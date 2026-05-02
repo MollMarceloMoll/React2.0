@@ -187,12 +187,6 @@ const Login = () => {
                     />
                 </div>
                 
-                <div className="my-4 text-right">
-                    <a href="#" className="text-sm text-blue-600 hover:text-blue-800">
-                        Recordar contraseña
-                    </a>
-                </div>
-                
                 <button
                     type="submit"
                     disabled={loading}
