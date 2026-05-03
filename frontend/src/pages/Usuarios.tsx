@@ -497,6 +497,7 @@ const Usuarios = () => {
                             : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500'
                           }
                         `}
+                        disabled
                       />
                       <button
                         type="button"
@@ -564,6 +565,7 @@ const Usuarios = () => {
                             : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500'
                           }
                         `}
+                        disabled
                       />
                       <button
                         type="button"
